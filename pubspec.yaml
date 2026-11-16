@@ -1,0 +1,22 @@
+name: flutter_quiz_300
+description: Ôn tập 300 câu trắc nghiệm Flutter song ngữ Anh - Việt (INT1449, chủ đề 32).
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.4.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  provider: ^6.1.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/data/questions.json
