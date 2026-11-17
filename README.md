@@ -3,9 +3,9 @@
 ## Mục đích
 App ôn tập 300 câu trắc nghiệm Flutter song ngữ Anh – Việt, chia thành 20 khối kiến thức.
 Đã có: nạp dữ liệu từ JSON, luyện tập theo khối (đúng/sai và giải thích ngay), thi thử bốc đề theo tỉ lệ các khối,
-thống kê theo khối, làm lại câu sai, chọn ngôn ngữ câu hỏi (Việt/Anh) ngay ở trang chủ, được nhớ sau khi thoát app (vẫn đổi nhanh được khi làm bài),
+thống kê theo khối, làm lại câu sai, giao diện hai ngôn ngữ Việt/Anh: chọn ngôn ngữ hiển thị ngay ở trang chủ (đổi cả chữ trên giao diện lẫn nội dung câu hỏi), được nhớ sau khi thoát app, vẫn đổi nhanh được khi làm bài,
 đồng hồ đếm ngược khi thi thử (90 giây/câu, 30 câu = 45 phút; hết giờ tự nộp).
-Chưa làm: dịch chữ trên giao diện (menu, nút) sang tiếng Anh; hiện chỉ nội dung câu hỏi, đáp án, giải thích và tên khối đổi theo ngôn ngữ.
+Lưu ý: chữ do hệ thống Android tạo ra (ví dụ gợi ý của nút quay lại) vẫn theo ngôn ngữ của điện thoại.
 
 ## Cài đặt
 ```bash
@@ -25,6 +25,7 @@ flutter test
 - `lib/domain`: model (`Question`, `QuestionBank`), `QuestionRepository` (trừu tượng), tách đoạn mã.
 - `lib/data`: `AssetQuestionRepository` đọc `assets/data/questions.json`.
 - `lib/presentation`: controller (`ChangeNotifier` + Provider) và các màn hình.
+- `lib/domain/app_strings.dart`: toàn bộ chữ giao diện, mỗi chuỗi có đủ bản Việt và Anh.
 - `lib/domain/exam.dart`, `practice_session.dart`, `progress_stats.dart`: logic thuần Dart (bốc đề, chấm, thống kê) có unit test.
 
 ## Dữ liệu lưu ở đâu

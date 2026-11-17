@@ -9,6 +9,7 @@ import '../domain/question.dart';
 import 'exam_result_screen.dart';
 import 'progress_controller.dart';
 import 'settings_controller.dart';
+import 'strings_context.dart';
 import 'widgets/exam_timer_bar.dart';
 import 'widgets/language_toggle.dart';
 import 'widgets/option_tile.dart';
@@ -95,25 +96,22 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
 
   Future<void> _submit() async {
     if (_submitted) return;
+    final s = context.stringsNow;
     final unanswered = _session.unansweredCount;
     _dialogOpen = true;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Nộp bài?'),
-        content: Text(
-          unanswered == 0
-              ? 'Bạn đã trả lời hết các câu.'
-              : 'Còn $unanswered câu chưa trả lời, sẽ tính là sai.',
-        ),
+        title: Text(s.submitQuestion),
+        content: Text(unanswered == 0 ? s.allAnswered : s.unansweredWarning(unanswered)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Làm tiếp'),
+            child: Text(s.keepGoing),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Nộp bài'),
+            child: Text(s.submit),
           ),
         ],
       ),
@@ -127,6 +125,7 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsController>();
     final lang = settings.language;
+    final s = settings.strings;
     final total = _session.questions.length;
     final q = _session.questions[_index];
     final options = q.optionsFor(lang);
@@ -135,10 +134,10 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Thi thử'),
+        title: Text(s.exam),
         actions: [
           LanguageToggle(language: lang, onChanged: settings.setLanguage),
-          TextButton(onPressed: _submit, child: const Text('Nộp bài')),
+          TextButton(onPressed: _submit, child: Text(s.submit)),
           const SizedBox(width: 8),
         ],
       ),
@@ -152,7 +151,7 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
           ),
           LinearProgressIndicator(
             value: (_index + 1) / total,
-            semanticsLabel: 'Vị trí câu hỏi',
+            semanticsLabel: s.questionPosition,
           ),
           Expanded(
             child: ListView(
@@ -160,7 +159,7 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
               padding: const EdgeInsets.all(16),
               children: [
                 Text(
-                  'Câu ${_index + 1}/$total',
+                  s.examQuestionHeader(_index + 1, total),
                   style: Theme.of(context).textTheme.labelLarge,
                 ),
                 const SizedBox(height: 8),
@@ -184,14 +183,14 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: _index == 0 ? null : () => setState(() => _index--),
-                      child: const Text('Câu trước'),
+                      child: Text(s.previous),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: FilledButton(
                       onPressed: _index == total - 1 ? null : () => setState(() => _index++),
-                      child: const Text('Câu tiếp'),
+                      child: Text(s.next),
                     ),
                   ),
                 ],

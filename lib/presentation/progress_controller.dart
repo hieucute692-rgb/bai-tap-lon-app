@@ -4,6 +4,9 @@ import '../domain/progress.dart';
 import '../domain/progress_repository.dart';
 import 'question_bank_controller.dart';
 
+/// Loại sự cố khi đọc/ghi tiến độ; giao diện tự đổi thành câu chữ theo ngôn ngữ.
+enum ProgressProblem { loadFailed, saveFailed }
+
 /// Giữ tiến độ làm bài trong bộ nhớ và ghi xuống máy. Lỗi đọc/ghi không làm app dừng:
 /// app vẫn dùng được và [problem] cho giao diện biết để báo người dùng.
 class ProgressController extends ChangeNotifier {
@@ -18,13 +21,13 @@ class ProgressController extends ChangeNotifier {
   LoadStatus _status = LoadStatus.loading;
   Map<int, QuestionStat> _stats = {};
   List<ExamResult> _exams = [];
-  String? _problem;
+  ProgressProblem? _problem;
   bool _disposed = false;
 
   LoadStatus get status => _status;
   Map<int, QuestionStat> get stats => Map.unmodifiable(_stats);
   List<ExamResult> get examResults => List.unmodifiable(_exams);
-  String? get problem => _problem;
+  ProgressProblem? get problem => _problem;
 
   Future<void> load() async {
     try {
@@ -35,7 +38,7 @@ class ProgressController extends ChangeNotifier {
       debugPrint('Không đọc được tiến độ: $e\n$st');
       _stats = {};
       _exams = [];
-      _problem = 'Không đọc được tiến độ đã lưu trên máy.';
+      _problem = ProgressProblem.loadFailed;
     }
     _status = LoadStatus.ready;
     _notify();
@@ -63,7 +66,7 @@ class ProgressController extends ChangeNotifier {
       await _repository.saveStats(_stats);
     } catch (e, st) {
       debugPrint('Không lưu được tiến độ: $e\n$st');
-      _problem = 'Không lưu được tiến độ trên máy; kết quả sẽ mất khi thoát app.';
+      _problem = ProgressProblem.saveFailed;
       _notify();
     }
   }
@@ -75,7 +78,7 @@ class ProgressController extends ChangeNotifier {
       await _repository.saveExamResults(_exams);
     } catch (e, st) {
       debugPrint('Không lưu được lịch sử thi thử: $e\n$st');
-      _problem = 'Không lưu được tiến độ trên máy; kết quả sẽ mất khi thoát app.';
+      _problem = ProgressProblem.saveFailed;
       _notify();
     }
   }

@@ -14,10 +14,10 @@ class PracticeSetupScreen extends StatelessWidget {
 
   final QuestionBank bank;
 
-  void _start(BuildContext context, String title, List<Question> questions) {
+  void _start(BuildContext context, PracticeTitle titleOf, List<Question> questions) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => PracticeScreen(title: title, questions: questions),
+        builder: (_) => PracticeScreen(titleOf: titleOf, questions: questions),
       ),
     );
   }
@@ -25,19 +25,21 @@ class PracticeSetupScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final progress = context.watch<ProgressController>();
-    final lang = context.watch<SettingsController>().language;
+    final settings = context.watch<SettingsController>();
+    final lang = settings.language;
+    final s = settings.strings;
     final blocks = computeBlockProgress(bank, progress.stats);
     return Scaffold(
-      appBar: AppBar(title: const Text('Luyện tập')),
+      appBar: AppBar(title: Text(s.practice)),
       body: ListView(
         children: [
           ListTile(
             minVerticalPadding: 12,
             leading: const CircleAvatar(child: Icon(Icons.all_inclusive)),
-            title: const Text('Tất cả các khối'),
-            subtitle: Text('${bank.questions.length} câu'),
+            title: Text(s.allBlocks),
+            subtitle: Text(s.questionCount(bank.questions.length)),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => _start(context, 'Luyện tập tất cả', bank.questions),
+            onTap: () => _start(context, (s) => s.practiceAll, bank.questions),
           ),
           for (final p in blocks)
             ListTile(
@@ -46,12 +48,12 @@ class PracticeSetupScreen extends StatelessWidget {
               title: Text(p.block.nameFor(lang)),
               subtitle: Text(
                 '${lang == ContentLanguage.vi ? p.block.nameEn : p.block.nameVi}'
-                ' · Đã làm ${p.answered}/${p.total}',
+                ' · ${s.practiceDone(p.answered, p.total)}',
               ),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => _start(
                 context,
-                'Khối ${p.block.id}. ${p.block.nameFor(lang)}',
+                (s) => s.blockTitle(p.block.id, p.block.nameFor(s.language)),
                 bank.inBlock(p.block.id),
               ),
             ),

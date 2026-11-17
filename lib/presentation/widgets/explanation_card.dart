@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../strings_context.dart';
+
 class ExplanationCard extends StatelessWidget {
   const ExplanationCard({super.key, required this.text});
 
@@ -14,7 +16,7 @@ class ExplanationCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Giải thích', style: Theme.of(context).textTheme.titleSmall),
+            Text(context.strings.explanation, style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 4),
             Text(text),
           ],

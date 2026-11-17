@@ -81,7 +81,7 @@ void main() {
     );
   });
 
-  testWidgets('chọn English ở trang chủ: lưu lại và áp dụng khi luyện tập', (tester) async {
+  testWidgets('chọn English ở trang chủ: lưu lại, đổi giao diện và nội dung câu hỏi', (tester) async {
     final settings = FakeSettingsRepository();
     final repo = await pumpApp(tester, settings: settings);
     repo.completeLast(sampleBank());
@@ -92,9 +92,12 @@ void main() {
     await tester.pump();
     expect(settings.saved, ContentLanguage.en);
 
-    await tester.tap(find.text('Luyện tập'));
+    expect(find.text('Practice'), findsOneWidget);
+    expect(find.text('Luyện tập'), findsNothing);
+
+    await tester.tap(find.text('Practice'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Tất cả các khối'));
+    await tester.tap(find.text('All blocks'));
     await tester.pumpAndSettle();
 
     expect(find.text('Question 1'), findsOneWidget);
@@ -112,5 +115,28 @@ void main() {
       find.byType(SegmentedButton<ContentLanguage>),
     );
     expect(button.selected, {ContentLanguage.en});
+  });
+
+  testWidgets('chọn English: toàn bộ menu trang chủ đổi sang tiếng Anh', (tester) async {
+    final repo = await pumpApp(tester);
+    repo.completeLast(sampleBank());
+    await tester.pump();
+    await tester.pump();
+
+    await tester.tap(find.text('English'));
+    await tester.pump();
+
+    expect(find.text('Flutter Review'), findsOneWidget);
+    expect(find.text('3 questions · 2 knowledge blocks'), findsOneWidget);
+    expect(find.text('Display language'), findsOneWidget);
+    expect(find.text('Practice'), findsOneWidget);
+    expect(find.text('Mock exam'), findsOneWidget);
+    expect(find.text('Statistics'), findsOneWidget);
+    expect(find.text('Retry wrong answers'), findsOneWidget);
+
+    await tester.tap(find.text('Tiếng Việt'));
+    await tester.pump();
+    expect(find.text('Luyện tập'), findsOneWidget);
+    expect(find.text('Ngôn ngữ hiển thị'), findsOneWidget);
   });
 }

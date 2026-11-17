@@ -4,6 +4,7 @@ import '../domain/exam.dart';
 import '../domain/exam_countdown.dart';
 import '../domain/question_bank.dart';
 import 'exam_screen.dart';
+import 'strings_context.dart';
 
 /// Chọn số câu cho bài thi thử rồi bắt đầu.
 class ExamSetupScreen extends StatefulWidget {
@@ -20,34 +21,31 @@ class _ExamSetupScreenState extends State<ExamSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final s = context.strings;
     final total = widget.bank.questions.length;
     var options = [10, 20, 30].where((n) => n <= total).toList();
     if (options.isEmpty) options = [total];
     final count = _picked ?? options.last;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Thi thử')),
+      appBar: AppBar(title: Text(s.exam)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Text('Số câu', style: Theme.of(context).textTheme.titleMedium),
+          Text(s.questionCountLabel, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           SegmentedButton<int>(
             segments: [
               for (final n in options)
-                ButtonSegment<int>(value: n, label: Text('$n câu')),
+                ButtonSegment<int>(value: n, label: Text(s.questionCount(n))),
             ],
             selected: {count},
-            onSelectionChanged: (s) => setState(() => _picked = s.first),
+            onSelectionChanged: (sel) => setState(() => _picked = sel.first),
           ),
           const SizedBox(height: 8),
-          Text('Thời gian làm bài: ${defaultExamDuration(count).inMinutes} phút'),
+          Text(s.timeLimit(defaultExamDuration(count).inMinutes)),
           const SizedBox(height: 16),
-          const Text(
-            'Câu hỏi được bốc ngẫu nhiên, số câu mỗi khối tỉ lệ với số câu của khối đó. '
-            'Đáp án chỉ hiện sau khi nộp bài; câu bỏ trống tính là sai. '
-            'Hết giờ, bài được nộp tự động.',
-          ),
+          Text(s.examRules),
           const SizedBox(height: 24),
           FilledButton(
             onPressed: () {
@@ -61,7 +59,7 @@ class _ExamSetupScreenState extends State<ExamSetupScreen> {
                 ),
               );
             },
-            child: const Text('Bắt đầu'),
+            child: Text(s.start),
           ),
         ],
       ),

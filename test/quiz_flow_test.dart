@@ -25,7 +25,7 @@ void main() {
   testWidgets('luyện tập: chọn sai hiện giải thích và ghi nhận kết quả sai', (tester) async {
     final progress = ProgressController(FakeProgressRepository());
     await tester.pumpWidget(
-      wrap(progress, PracticeScreen(title: 'Thử', questions: [sampleQuestion(id: 1)])),
+      wrap(progress, PracticeScreen(titleOf: (_) => 'Thử', questions: [sampleQuestion(id: 1)])),
     );
 
     expect(find.text('Giải thích 1'), findsNothing);
@@ -36,14 +36,14 @@ void main() {
     expect(progress.stats[1]!.lastCorrect, isFalse);
   });
 
-  testWidgets('luyện tập: đổi ngôn ngữ trong lúc làm cũng đổi cài đặt chung', (tester) async {
+  testWidgets('luyện tập: đổi ngôn ngữ trong lúc làm đổi cả giao diện lẫn cài đặt chung', (tester) async {
     final progress = ProgressController(FakeProgressRepository());
     final settingsRepo = FakeSettingsRepository();
     final settings = SettingsController(settingsRepo);
     await tester.pumpWidget(
       wrap(
         progress,
-        PracticeScreen(title: 'Thử', questions: [sampleQuestion(id: 1)]),
+        PracticeScreen(titleOf: (_) => 'Thử', questions: [sampleQuestion(id: 1)]),
         settings: settings,
       ),
     );
@@ -53,6 +53,8 @@ void main() {
     await tester.pump();
 
     expect(find.text('Question 1'), findsOneWidget);
+    expect(find.text('Finish'), findsOneWidget); // chữ trên giao diện cũng đổi
+    expect(find.text('Hoàn tất'), findsNothing);
     expect(settings.language, ContentLanguage.en);
     expect(settingsRepo.saved, ContentLanguage.en);
   });
@@ -60,7 +62,7 @@ void main() {
   testWidgets('luyện tập: làm xong hiện tổng kết', (tester) async {
     final progress = ProgressController(FakeProgressRepository());
     await tester.pumpWidget(
-      wrap(progress, PracticeScreen(title: 'Thử', questions: [sampleQuestion(id: 1)])),
+      wrap(progress, PracticeScreen(titleOf: (_) => 'Thử', questions: [sampleQuestion(id: 1)])),
     );
 
     await tester.tap(find.text('Đáp án A'));
