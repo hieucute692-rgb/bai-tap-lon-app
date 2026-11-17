@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../domain/app_strings.dart';
 import '../domain/exam.dart';
 import '../domain/question.dart';
 import '../domain/question_text.dart';
@@ -10,19 +11,13 @@ import 'widgets/language_toggle.dart';
 import 'widgets/question_text.dart';
 
 /// Kết quả thi thử: điểm, và danh sách câu sai kèm đáp án đúng, giải thích.
-class ExamResultScreen extends StatefulWidget {
+class ExamResultScreen extends StatelessWidget {
   const ExamResultScreen({super.key, required this.session, this.timedOut = false});
 
   final ExamSession session;
 
   /// Bài được nộp tự động vì hết giờ.
   final bool timedOut;
-
-  @override
-  State<ExamResultScreen> createState() => _ExamResultScreenState();
-}
-
-class _ExamResultScreenState extends State<ExamResultScreen> {
 
   String _firstLine(String text) {
     final segments = parseQuestionText(text);
@@ -33,7 +28,7 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsController>();
     final lang = settings.language;
-    final session = widget.session;
+    final s = settings.strings;
     final total = session.questions.length;
     final correct = session.correctCount;
     final wrong = session.wrongQuestions;
@@ -41,7 +36,7 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Kết quả thi thử'),
+        title: Text(s.examResultTitle),
         actions: [
           LanguageToggle(language: lang, onChanged: settings.setLanguage),
         ],
@@ -50,34 +45,36 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           Text(
-            'Đúng $correct/$total câu',
+            s.correctOf(correct, total),
             style: Theme.of(context).textTheme.headlineSmall,
           ),
-          Text('Điểm: ${score.toStringAsFixed(1)}/10'),
-          if (widget.timedOut)
-            const Padding(
-              padding: EdgeInsets.only(top: 8),
-              child: Text('Hết giờ, bài đã được nộp tự động.'),
+          Text(s.scoreOf(score.toStringAsFixed(1))),
+          if (timedOut)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(s.timedOutNote),
             ),
           const SizedBox(height: 16),
           if (wrong.isEmpty)
-            const Text('Bạn trả lời đúng tất cả các câu.')
+            Text(s.allCorrect)
           else ...[
             Text(
-              'Các câu sai hoặc bỏ trống (${wrong.length})',
+              s.wrongOrUnanswered(wrong.length),
               style: Theme.of(context).textTheme.titleMedium,
             ),
-            for (final q in wrong) _WrongTile(
-              question: q,
-              chosen: session.answerOf(q),
-              lang: lang,
-              preview: _firstLine(q.questionFor(lang)),
-            ),
+            for (final q in wrong)
+              _WrongTile(
+                question: q,
+                chosen: session.answerOf(q),
+                lang: lang,
+                strings: s,
+                preview: _firstLine(q.questionFor(lang)),
+              ),
           ],
           const SizedBox(height: 16),
           FilledButton(
             onPressed: () => Navigator.of(context).popUntil((r) => r.isFirst),
-            child: const Text('Về trang chủ'),
+            child: Text(s.backToHome),
           ),
         ],
       ),
@@ -90,20 +87,23 @@ class _WrongTile extends StatelessWidget {
     required this.question,
     required this.chosen,
     required this.lang,
+    required this.strings,
     required this.preview,
   });
 
   final Question question;
   final int? chosen;
   final ContentLanguage lang;
+  final AppStrings strings;
   final String preview;
 
   @override
   Widget build(BuildContext context) {
     final options = question.optionsFor(lang);
     final right = question.correctIndex;
+    final pick = chosen;
     return ExpansionTile(
-      title: Text('Câu ${question.id}'),
+      title: Text(strings.questionLabel(question.id)),
       subtitle: Text(preview, maxLines: 2, overflow: TextOverflow.ellipsis),
       childrenPadding: const EdgeInsets.all(16),
       expandedCrossAxisAlignment: CrossAxisAlignment.start,
@@ -111,11 +111,11 @@ class _WrongTile extends StatelessWidget {
         QuestionText(question.questionFor(lang)),
         const SizedBox(height: 8),
         Text(
-          chosen == null
-              ? 'Bạn chưa trả lời.'
-              : 'Bạn chọn: ${'ABCD'[chosen!]}. ${options[chosen!]}',
+          pick == null
+              ? strings.notAnswered
+              : strings.youChose('ABCD'[pick], options[pick]),
         ),
-        Text('Đáp án đúng: ${'ABCD'[right]}. ${options[right]}'),
+        Text(strings.correctAnswer('ABCD'[right], options[right])),
         ExplanationCard(text: question.explanationFor(lang)),
       ],
     );

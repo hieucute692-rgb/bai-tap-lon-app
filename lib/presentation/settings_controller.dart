@@ -1,10 +1,11 @@
 import 'package:flutter/foundation.dart';
 
+import '../domain/app_strings.dart';
 import '../domain/question.dart';
 import '../domain/settings_repository.dart';
 
-/// Ngôn ngữ hiển thị nội dung câu hỏi dùng chung cho cả app: chọn ở trang chủ,
-/// đổi nhanh được trong lúc làm bài, và được nhớ sau khi thoát app.
+/// Ngôn ngữ hiển thị dùng chung cho cả app (chữ trên giao diện lẫn nội dung câu hỏi):
+/// chọn ở trang chủ, đổi nhanh được trong lúc làm bài, và được nhớ sau khi thoát app.
 class SettingsController extends ChangeNotifier {
   SettingsController(this._repository);
 
@@ -14,6 +15,7 @@ class SettingsController extends ChangeNotifier {
   bool _disposed = false;
 
   ContentLanguage get language => _language;
+  AppStrings get strings => AppStrings(_language);
 
   Future<void> load() async {
     try {

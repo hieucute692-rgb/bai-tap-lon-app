@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../domain/app_strings.dart';
 import '../domain/progress.dart';
 import '../domain/progress_stats.dart';
 import '../domain/question_bank.dart';
@@ -19,24 +20,32 @@ class StatsScreen extends StatelessWidget {
     return '${two(d.day)}/${two(d.month)} ${two(d.hour)}:${two(d.minute)}';
   }
 
+  static String _problemText(ProgressProblem p, AppStrings s) => switch (p) {
+        ProgressProblem.loadFailed => s.progressLoadProblem,
+        ProgressProblem.saveFailed => s.progressSaveProblem,
+      };
+
   @override
   Widget build(BuildContext context) {
     final c = context.watch<ProgressController>();
+    final settings = context.watch<SettingsController>();
+    final s = settings.strings;
     return Scaffold(
-      appBar: AppBar(title: const Text('Thống kê')),
+      appBar: AppBar(title: Text(s.stats)),
       body: switch (c.status) {
-        LoadStatus.ready => _content(context, c),
+        LoadStatus.ready => _content(context, c, settings),
         _ => const Center(child: CircularProgressIndicator()),
       },
     );
   }
 
-  Widget _content(BuildContext context, ProgressController c) {
-    final lang = context.watch<SettingsController>().language;
+  Widget _content(BuildContext context, ProgressController c, SettingsController settings) {
+    final lang = settings.language;
+    final s = settings.strings;
     final blocks = computeBlockProgress(bank, c.stats);
-    final answered = blocks.fold<int>(0, (s, b) => s + b.answered);
-    final attempts = blocks.fold<int>(0, (s, b) => s + b.attempts);
-    final correct = blocks.fold<int>(0, (s, b) => s + b.correct);
+    final answered = blocks.fold<int>(0, (sum, b) => sum + b.answered);
+    final attempts = blocks.fold<int>(0, (sum, b) => sum + b.attempts);
+    final correct = blocks.fold<int>(0, (sum, b) => sum + b.correct);
 
     if (attempts == 0) {
       return Center(
@@ -47,11 +56,11 @@ class StatsScreen extends StatelessWidget {
             children: [
               const Icon(Icons.bar_chart, size: 48),
               const SizedBox(height: 12),
-              const Text('Bạn chưa làm câu nào.', textAlign: TextAlign.center),
+              Text(s.statsEmpty, textAlign: TextAlign.center),
               const SizedBox(height: 16),
               FilledButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Quay lại để bắt đầu'),
+                child: Text(s.statsBack),
               ),
             ],
           ),
@@ -60,10 +69,11 @@ class StatsScreen extends StatelessWidget {
     }
 
     final theme = Theme.of(context);
+    final problem = c.problem;
     return ListView(
       padding: const EdgeInsets.only(bottom: 24),
       children: [
-        if (c.problem != null)
+        if (problem != null)
           Container(
             color: theme.colorScheme.errorContainer,
             padding: const EdgeInsets.all(12),
@@ -71,7 +81,7 @@ class StatsScreen extends StatelessWidget {
               children: [
                 const Icon(Icons.warning_amber),
                 const SizedBox(width: 8),
-                Expanded(child: Text(c.problem!)),
+                Expanded(child: Text(_problemText(problem, s))),
               ],
             ),
           ),
@@ -81,32 +91,36 @@ class StatsScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Đã làm $answered/${bank.questions.length} câu',
+                s.statsAnswered(answered, bank.questions.length),
                 style: theme.textTheme.titleMedium,
               ),
-              Text(
-                'Tỉ lệ đúng: ${(100 * correct / attempts).round()}% ($correct/$attempts lượt)',
-              ),
+              Text(s.statsAccuracy((100 * correct / attempts).round(), correct, attempts)),
             ],
           ),
         ),
         for (final b in blocks)
           ListTile(
-            title: Text('Khối ${b.block.id}. ${b.block.nameFor(lang)}'),
+            title: Text(s.blockTitle(b.block.id, b.block.nameFor(lang))),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 4),
                 LinearProgressIndicator(
                   value: b.accuracy ?? 0,
-                  semanticsLabel: 'Tỉ lệ đúng khối ${b.block.id}',
+                  semanticsLabel: s.accuracyForBlock(b.block.id),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   b.attempts == 0
-                      ? 'Chưa làm · ${b.total} câu'
-                      : 'Đúng ${(b.accuracy! * 100).round()}% (${b.correct}/${b.attempts} lượt)'
-                          ' · Đã làm ${b.answered}/${b.total} · Đang sai ${b.wrong}',
+                      ? s.blockNotStarted(b.total)
+                      : s.blockStatsLine(
+                          percent: (b.accuracy! * 100).round(),
+                          correct: b.correct,
+                          attempts: b.attempts,
+                          answered: b.answered,
+                          total: b.total,
+                          wrong: b.wrong,
+                        ),
                 ),
               ],
             ),
@@ -114,12 +128,12 @@ class StatsScreen extends StatelessWidget {
         if (c.examResults.isNotEmpty) ...[
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-            child: Text('Lịch sử thi thử', style: theme.textTheme.titleMedium),
+            child: Text(s.examHistory, style: theme.textTheme.titleMedium),
           ),
           for (final ExamResult r in c.examResults)
             ListTile(
               leading: const Icon(Icons.assignment_turned_in_outlined),
-              title: Text('${r.correct}/${r.total} câu · ${r.score10.toStringAsFixed(1)}/10'),
+              title: Text(s.examHistoryEntry(r.correct, r.total, r.score10.toStringAsFixed(1))),
               subtitle: Text(_formatTime(r.takenAt)),
             ),
         ],

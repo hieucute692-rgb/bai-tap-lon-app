@@ -11,6 +11,7 @@ import 'progress_controller.dart';
 import 'question_bank_controller.dart';
 import 'settings_controller.dart';
 import 'stats_screen.dart';
+import 'strings_context.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -18,21 +19,22 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.watch<QuestionBankController>();
+    final s = context.strings;
     return Scaffold(
-      appBar: AppBar(title: const Text('Ôn tập Flutter')),
+      appBar: AppBar(title: Text(s.appTitle)),
       body: switch (c.status) {
         LoadStatus.loading => const Center(child: CircularProgressIndicator()),
         LoadStatus.error => _Message(
             icon: Icons.error_outline,
-            text: c.errorMessage ?? 'Đã xảy ra lỗi.',
-            actionLabel: 'Thử lại',
+            text: s.bankLoadError,
+            actionLabel: s.retry,
             onAction: c.load,
           ),
         LoadStatus.ready => c.bank!.isEmpty
             ? _Message(
                 icon: Icons.inbox_outlined,
-                text: 'Chưa có câu hỏi nào.',
-                actionLabel: 'Tải lại',
+                text: s.noQuestions,
+                actionLabel: s.reload,
                 onAction: c.load,
               )
             : _Menu(bank: c.bank!),
@@ -54,48 +56,54 @@ class _Menu extends StatelessWidget {
   Widget build(BuildContext context) {
     final progress = context.watch<ProgressController>();
     final settings = context.watch<SettingsController>();
+    final s = settings.strings;
     final wrong = wrongQuestions(bank, progress.stats);
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
         Text(
-          '${bank.questions.length} câu · ${bank.blocks.length} khối kiến thức',
+          s.questionsAndBlocks(bank.questions.length, bank.blocks.length),
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 12),
-        _LanguageCard(language: settings.language, onChanged: settings.setLanguage),
+        _LanguageCard(
+          title: s.displayLanguage,
+          language: settings.language,
+          onChanged: settings.setLanguage,
+        ),
         _MenuCard(
           icon: Icons.menu_book_outlined,
-          title: 'Luyện tập',
-          subtitle: 'Làm theo khối, biết đúng sai và xem giải thích ngay',
+          title: s.practice,
+          subtitle: s.practiceSubtitle,
           onTap: () => _push(context, PracticeSetupScreen(bank: bank)),
         ),
         _MenuCard(
           icon: Icons.timer_outlined,
-          title: 'Thi thử',
-          subtitle: 'Bốc ngẫu nhiên theo tỉ lệ các khối, chấm khi nộp bài',
+          title: s.exam,
+          subtitle: s.examSubtitle,
           onTap: () => _push(context, ExamSetupScreen(bank: bank)),
         ),
         _MenuCard(
           icon: Icons.bar_chart,
-          title: 'Thống kê',
-          subtitle: 'Tỉ lệ đúng theo từng khối và lịch sử thi thử',
+          title: s.stats,
+          subtitle: s.statsSubtitle,
           onTap: () => _push(context, StatsScreen(bank: bank)),
         ),
         _MenuCard(
           icon: Icons.replay,
-          title: 'Làm lại câu sai',
-          subtitle: wrong.isEmpty ? 'Chưa có câu sai' : '${wrong.length} câu đang sai',
+          title: s.retryWrong,
+          subtitle: wrong.isEmpty ? s.noWrongSubtitle : s.wrongCount(wrong.length),
           onTap: () {
             if (wrong.isEmpty) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Chưa có câu sai nào. Hãy luyện tập hoặc thi thử trước.'),
-                ),
+                SnackBar(content: Text(s.noWrongYet)),
               );
               return;
             }
-            _push(context, PracticeScreen(title: 'Làm lại câu sai', questions: wrong));
+            _push(
+              context,
+              PracticeScreen(titleOf: (s) => s.retryWrong, questions: wrong),
+            );
           },
         ),
       ],
@@ -103,10 +111,15 @@ class _Menu extends StatelessWidget {
   }
 }
 
-/// Chọn ngôn ngữ hiển thị nội dung câu hỏi cho toàn bộ app.
+/// Chọn ngôn ngữ hiển thị cho cả app (chữ giao diện và nội dung câu hỏi).
 class _LanguageCard extends StatelessWidget {
-  const _LanguageCard({required this.language, required this.onChanged});
+  const _LanguageCard({
+    required this.title,
+    required this.language,
+    required this.onChanged,
+  });
 
+  final String title;
   final ContentLanguage language;
   final ValueChanged<ContentLanguage> onChanged;
 
@@ -122,10 +135,7 @@ class _LanguageCard extends StatelessWidget {
               children: [
                 const Icon(Icons.translate),
                 const SizedBox(width: 12),
-                Text(
-                  'Ngôn ngữ câu hỏi',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
+                Text(title, style: Theme.of(context).textTheme.titleMedium),
               ],
             ),
             const SizedBox(height: 12),

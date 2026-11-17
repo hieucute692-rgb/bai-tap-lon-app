@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../domain/exam_countdown.dart';
+import '../strings_context.dart';
 
 /// Thanh hiển thị thời gian còn lại và số câu đã trả lời. Khi sắp hết giờ đổi biểu tượng
 /// và màu nền, đồng thời có nhãn đọc cho trình đọc màn hình.
@@ -21,6 +22,7 @@ class ExamTimerBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final strings = context.strings;
     final time = ExamCountdown.format(remaining);
     return Container(
       width: double.infinity,
@@ -29,14 +31,14 @@ class ExamTimerBar extends StatelessWidget {
       child: Row(
         children: [
           Semantics(
-            label: warning ? 'Sắp hết giờ, còn lại $time' : 'Còn lại $time',
+            label: warning ? strings.almostOutOfTime(time) : strings.timeLeft(time),
             child: ExcludeSemantics(
               child: Row(
                 children: [
                   Icon(warning ? Icons.warning_amber : Icons.timer_outlined),
                   const SizedBox(width: 8),
                   Text(
-                    'Còn lại $time',
+                    strings.timeLeft(time),
                     style: Theme.of(context)
                         .textTheme
                         .titleSmall
@@ -47,7 +49,7 @@ class ExamTimerBar extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          Text('Đã trả lời $answered/$total'),
+          Text(strings.answeredOf(answered, total)),
         ],
       ),
     );

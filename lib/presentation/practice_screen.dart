@@ -1,21 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../domain/app_strings.dart';
 import '../domain/practice_session.dart';
 import '../domain/question.dart';
 import 'progress_controller.dart';
 import 'settings_controller.dart';
+import 'strings_context.dart';
 import 'widgets/explanation_card.dart';
 import 'widgets/language_toggle.dart';
 import 'widgets/option_tile.dart';
 import 'widgets/question_text.dart';
 
+/// Tiêu đề màn hình, tính lại mỗi lần vẽ để đổi theo ngôn ngữ đang chọn.
+typedef PracticeTitle = String Function(AppStrings strings);
+
 /// Luyện tập: chọn đáp án là biết đúng sai ngay, kèm giải thích.
 /// Dùng chung cho luyện theo khối và "làm lại câu sai".
 class PracticeScreen extends StatefulWidget {
-  const PracticeScreen({super.key, required this.title, required this.questions});
+  const PracticeScreen({super.key, required this.titleOf, required this.questions});
 
-  final String title;
+  final PracticeTitle titleOf;
   final List<Question> questions;
 
   @override
@@ -54,6 +59,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsController>();
     final lang = settings.language;
+    final s = settings.strings;
     if (_finished) {
       return _PracticeSummary(
         correct: _session.correctCount,
@@ -67,7 +73,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text(widget.titleOf(s)),
         actions: [
           LanguageToggle(language: lang, onChanged: settings.setLanguage),
         ],
@@ -76,7 +82,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
         children: [
           LinearProgressIndicator(
             value: (_session.index + 1) / total,
-            semanticsLabel: 'Tiến độ luyện tập',
+            semanticsLabel: s.practiceProgress,
           ),
           Expanded(
             child: ListView(
@@ -84,7 +90,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
               padding: const EdgeInsets.all(16),
               children: [
                 Text(
-                  'Câu ${_session.index + 1}/$total · Khối ${q.blockId}',
+                  s.practiceQuestionHeader(_session.index + 1, total, q.blockId),
                   style: Theme.of(context).textTheme.labelLarge,
                 ),
                 const SizedBox(height: 8),
@@ -108,7 +114,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                 width: double.infinity,
                 child: FilledButton(
                   onPressed: chosen == null ? null : _next,
-                  child: Text(_session.isLast ? 'Hoàn tất' : 'Câu tiếp'),
+                  child: Text(_session.isLast ? s.finish : s.next),
                 ),
               ),
             ),
@@ -127,8 +133,9 @@ class _PracticeSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = context.strings;
     return Scaffold(
-      appBar: AppBar(title: const Text('Kết quả luyện tập')),
+      appBar: AppBar(title: Text(s.practiceResultTitle)),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -138,13 +145,13 @@ class _PracticeSummary extends StatelessWidget {
               const Icon(Icons.emoji_events_outlined, size: 56),
               const SizedBox(height: 12),
               Text(
-                'Đúng $correct/$total câu',
+                s.correctOf(correct, total),
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 24),
               FilledButton(
                 onPressed: () => Navigator.of(context).popUntil((r) => r.isFirst),
-                child: const Text('Về trang chủ'),
+                child: Text(s.backToHome),
               ),
             ],
           ),
