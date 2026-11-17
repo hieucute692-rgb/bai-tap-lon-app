@@ -1,0 +1,31 @@
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../domain/bookmark_repository.dart';
+
+/// Lưu các câu đã đánh dấu trên máy bằng shared_preferences. Dữ liệu hỏng thì coi như chưa có.
+class SharedPrefsBookmarkRepository implements BookmarkRepository {
+  static const key = 'bookmarks_v1';
+
+  @override
+  Future<Set<int>> loadBookmarks() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(key);
+    if (raw == null) return <int>{};
+    try {
+      final list = jsonDecode(raw) as List;
+      return <int>{for (final e in list) e as int};
+    } catch (e) {
+      debugPrint('Danh sách đánh dấu bị hỏng, bỏ qua: $e');
+      return <int>{};
+    }
+  }
+
+  @override
+  Future<void> saveBookmarks(Set<int> ids) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(key, jsonEncode(ids.toList()..sort()));
+  }
+}

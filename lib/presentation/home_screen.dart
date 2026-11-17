@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../domain/progress_stats.dart';
 import '../domain/question.dart';
 import '../domain/question_bank.dart';
+import 'bookmark_controller.dart';
+import 'bookmarks_screen.dart';
 import 'exam_setup_screen.dart';
 import 'practice_screen.dart';
 import 'practice_setup_screen.dart';
@@ -56,6 +58,7 @@ class _Menu extends StatelessWidget {
   Widget build(BuildContext context) {
     final progress = context.watch<ProgressController>();
     final settings = context.watch<SettingsController>();
+    final bookmarks = context.watch<BookmarkController>();
     final s = settings.strings;
     final wrong = wrongQuestions(bank, progress.stats);
     return ListView(
@@ -105,6 +108,14 @@ class _Menu extends StatelessWidget {
               PracticeScreen(titleOf: (s) => s.retryWrong, questions: wrong),
             );
           },
+        ),
+        _MenuCard(
+          icon: Icons.bookmark_outline,
+          title: s.bookmarks,
+          subtitle: bookmarks.count == 0
+              ? s.noBookmarksSubtitle
+              : s.bookmarkedCount(bookmarks.count),
+          onTap: () => _push(context, BookmarksScreen(bank: bank)),
         ),
       ],
     );

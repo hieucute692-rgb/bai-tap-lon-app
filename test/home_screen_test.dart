@@ -9,6 +9,7 @@ import 'fakes.dart';
 Future<ControlledRepository> pumpApp(
   WidgetTester tester, {
   FakeSettingsRepository? settings,
+  FakeBookmarkRepository? bookmarks,
 }) async {
   final repo = ControlledRepository();
   await tester.pumpWidget(
@@ -16,6 +17,7 @@ Future<ControlledRepository> pumpApp(
       repository: repo,
       progressRepository: FakeProgressRepository(),
       settingsRepository: settings ?? FakeSettingsRepository(),
+      bookmarkRepository: bookmarks ?? FakeBookmarkRepository(),
     ),
   );
   return repo;
@@ -138,5 +140,29 @@ void main() {
     await tester.pump();
     expect(find.text('Luyện tập'), findsOneWidget);
     expect(find.text('Ngôn ngữ hiển thị'), findsOneWidget);
+  });
+
+  testWidgets('có mục Đánh dấu thứ năm, hiện số câu đã đánh dấu', (tester) async {
+    final repo = await pumpApp(tester, bookmarks: FakeBookmarkRepository(saved: {1, 3}));
+    repo.completeLast(sampleBank());
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('Đánh dấu'), findsOneWidget);
+    expect(find.text('2 câu đã đánh dấu'), findsOneWidget);
+  });
+
+  testWidgets('chưa đánh dấu câu nào: mở mục Đánh dấu thấy trạng thái trống', (tester) async {
+    final repo = await pumpApp(tester);
+    repo.completeLast(sampleBank());
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('Chưa có câu nào'), findsOneWidget);
+    await tester.tap(find.text('Đánh dấu'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Chưa có câu nào được đánh dấu.'), findsOneWidget);
+    expect(find.text('Quay lại'), findsOneWidget);
   });
 }

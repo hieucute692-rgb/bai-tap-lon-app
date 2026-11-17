@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter_quiz_300/domain/bookmark_repository.dart';
 import 'package:flutter_quiz_300/domain/progress.dart';
 import 'package:flutter_quiz_300/domain/progress_repository.dart';
 import 'package:flutter_quiz_300/domain/question.dart';
@@ -111,5 +112,27 @@ class FakeSettingsRepository implements SettingsRepository {
   Future<void> saveLanguage(ContentLanguage language) async {
     if (failSave) throw Exception('lỗi ghi giả lập');
     saved = language;
+  }
+}
+
+/// Repository đánh dấu giả lưu trong bộ nhớ, có thể bật lỗi đọc/ghi.
+class FakeBookmarkRepository implements BookmarkRepository {
+  FakeBookmarkRepository({Set<int>? saved, this.failLoad = false, this.failSave = false})
+      : saved = saved ?? <int>{};
+
+  Set<int> saved;
+  bool failLoad;
+  bool failSave;
+
+  @override
+  Future<Set<int>> loadBookmarks() async {
+    if (failLoad) throw Exception('lỗi đọc giả lập');
+    return Set.of(saved);
+  }
+
+  @override
+  Future<void> saveBookmarks(Set<int> ids) async {
+    if (failSave) throw Exception('lỗi ghi giả lập');
+    saved = Set.of(ids);
   }
 }

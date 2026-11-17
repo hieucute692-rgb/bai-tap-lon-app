@@ -6,6 +6,7 @@ import '../domain/exam.dart';
 import '../domain/question.dart';
 import '../domain/question_text.dart';
 import 'settings_controller.dart';
+import 'widgets/bookmark_button.dart';
 import 'widgets/explanation_card.dart';
 import 'widgets/language_toggle.dart';
 import 'widgets/question_text.dart';
@@ -108,6 +109,10 @@ class _WrongTile extends StatelessWidget {
       childrenPadding: const EdgeInsets.all(16),
       expandedCrossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Align(
+          alignment: Alignment.centerRight,
+          child: BookmarkButton(questionId: question.id),
+        ),
         QuestionText(question.questionFor(lang)),
         const SizedBox(height: 8),
         Text(
