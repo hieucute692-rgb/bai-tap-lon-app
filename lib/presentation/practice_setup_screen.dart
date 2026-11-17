@@ -6,6 +6,7 @@ import '../domain/question.dart';
 import '../domain/question_bank.dart';
 import 'practice_screen.dart';
 import 'progress_controller.dart';
+import 'settings_controller.dart';
 
 /// Chọn phạm vi luyện tập: tất cả hoặc một khối kiến thức.
 class PracticeSetupScreen extends StatelessWidget {
@@ -24,6 +25,7 @@ class PracticeSetupScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final progress = context.watch<ProgressController>();
+    final lang = context.watch<SettingsController>().language;
     final blocks = computeBlockProgress(bank, progress.stats);
     return Scaffold(
       appBar: AppBar(title: const Text('Luyện tập')),
@@ -41,14 +43,15 @@ class PracticeSetupScreen extends StatelessWidget {
             ListTile(
               minVerticalPadding: 12,
               leading: CircleAvatar(child: Text('${p.block.id}')),
-              title: Text(p.block.nameVi),
+              title: Text(p.block.nameFor(lang)),
               subtitle: Text(
-                '${p.block.nameEn} · Đã làm ${p.answered}/${p.total}',
+                '${lang == ContentLanguage.vi ? p.block.nameEn : p.block.nameVi}'
+                ' · Đã làm ${p.answered}/${p.total}',
               ),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => _start(
                 context,
-                'Khối ${p.block.id}. ${p.block.nameVi}',
+                'Khối ${p.block.id}. ${p.block.nameFor(lang)}',
                 bank.inBlock(p.block.id),
               ),
             ),

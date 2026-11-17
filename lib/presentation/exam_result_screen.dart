@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../domain/exam.dart';
 import '../domain/question.dart';
 import '../domain/question_text.dart';
+import 'settings_controller.dart';
 import 'widgets/explanation_card.dart';
 import 'widgets/language_toggle.dart';
 import 'widgets/question_text.dart';
@@ -21,7 +23,6 @@ class ExamResultScreen extends StatefulWidget {
 }
 
 class _ExamResultScreenState extends State<ExamResultScreen> {
-  ContentLanguage _lang = ContentLanguage.vi;
 
   String _firstLine(String text) {
     final segments = parseQuestionText(text);
@@ -30,6 +31,8 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsController>();
+    final lang = settings.language;
     final session = widget.session;
     final total = session.questions.length;
     final correct = session.correctCount;
@@ -40,7 +43,7 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
       appBar: AppBar(
         title: const Text('Kết quả thi thử'),
         actions: [
-          LanguageToggle(language: _lang, onChanged: (l) => setState(() => _lang = l)),
+          LanguageToggle(language: lang, onChanged: settings.setLanguage),
         ],
       ),
       body: ListView(
@@ -67,8 +70,8 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
             for (final q in wrong) _WrongTile(
               question: q,
               chosen: session.answerOf(q),
-              lang: _lang,
-              preview: _firstLine(q.questionFor(_lang)),
+              lang: lang,
+              preview: _firstLine(q.questionFor(lang)),
             ),
           ],
           const SizedBox(height: 16),

@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../domain/progress_stats.dart';
+import '../domain/question.dart';
 import '../domain/question_bank.dart';
 import 'exam_setup_screen.dart';
 import 'practice_screen.dart';
 import 'practice_setup_screen.dart';
 import 'progress_controller.dart';
 import 'question_bank_controller.dart';
+import 'settings_controller.dart';
 import 'stats_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -51,6 +53,7 @@ class _Menu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final progress = context.watch<ProgressController>();
+    final settings = context.watch<SettingsController>();
     final wrong = wrongQuestions(bank, progress.stats);
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -60,6 +63,7 @@ class _Menu extends StatelessWidget {
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 12),
+        _LanguageCard(language: settings.language, onChanged: settings.setLanguage),
         _MenuCard(
           icon: Icons.menu_book_outlined,
           title: 'Luyện tập',
@@ -95,6 +99,51 @@ class _Menu extends StatelessWidget {
           },
         ),
       ],
+    );
+  }
+}
+
+/// Chọn ngôn ngữ hiển thị nội dung câu hỏi cho toàn bộ app.
+class _LanguageCard extends StatelessWidget {
+  const _LanguageCard({required this.language, required this.onChanged});
+
+  final ContentLanguage language;
+  final ValueChanged<ContentLanguage> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.translate),
+                const SizedBox(width: 12),
+                Text(
+                  'Ngôn ngữ câu hỏi',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: SegmentedButton<ContentLanguage>(
+                segments: const <ButtonSegment<ContentLanguage>>[
+                  ButtonSegment(value: ContentLanguage.vi, label: Text('Tiếng Việt')),
+                  ButtonSegment(value: ContentLanguage.en, label: Text('English')),
+                ],
+                selected: {language},
+                showSelectedIcon: false,
+                onSelectionChanged: (s) => onChanged(s.first),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -6,6 +6,7 @@ import '../domain/progress_stats.dart';
 import '../domain/question_bank.dart';
 import 'progress_controller.dart';
 import 'question_bank_controller.dart';
+import 'settings_controller.dart';
 
 /// Thống kê theo khối kiến thức và lịch sử thi thử.
 class StatsScreen extends StatelessWidget {
@@ -31,6 +32,7 @@ class StatsScreen extends StatelessWidget {
   }
 
   Widget _content(BuildContext context, ProgressController c) {
+    final lang = context.watch<SettingsController>().language;
     final blocks = computeBlockProgress(bank, c.stats);
     final answered = blocks.fold<int>(0, (s, b) => s + b.answered);
     final attempts = blocks.fold<int>(0, (s, b) => s + b.attempts);
@@ -90,7 +92,7 @@ class StatsScreen extends StatelessWidget {
         ),
         for (final b in blocks)
           ListTile(
-            title: Text('Khối ${b.block.id}. ${b.block.nameVi}'),
+            title: Text('Khối ${b.block.id}. ${b.block.nameFor(lang)}'),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
