@@ -3,8 +3,9 @@
 ## Mục đích
 App ôn tập 300 câu trắc nghiệm Flutter song ngữ Anh – Việt, chia thành 20 khối kiến thức.
 Đã có: nạp dữ liệu từ JSON, luyện tập theo khối (đúng/sai và giải thích ngay), thi thử bốc đề theo tỉ lệ các khối,
-thống kê theo khối, làm lại câu sai, nút đổi nhanh VI/EN khi làm bài.
-Chưa làm: lưu lựa chọn ngôn ngữ và giao diện hai ngôn ngữ, đồng hồ đếm ngược.
+thống kê theo khối, làm lại câu sai, nút đổi nhanh VI/EN khi làm bài,
+đồng hồ đếm ngược khi thi thử (90 giây/câu, 30 câu = 45 phút; hết giờ tự nộp).
+Chưa làm: lưu lựa chọn ngôn ngữ và giao diện hai ngôn ngữ.
 
 ## Cài đặt
 ```bash

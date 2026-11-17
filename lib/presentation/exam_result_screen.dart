@@ -9,9 +9,12 @@ import 'widgets/question_text.dart';
 
 /// Kết quả thi thử: điểm, và danh sách câu sai kèm đáp án đúng, giải thích.
 class ExamResultScreen extends StatefulWidget {
-  const ExamResultScreen({super.key, required this.session});
+  const ExamResultScreen({super.key, required this.session, this.timedOut = false});
 
   final ExamSession session;
+
+  /// Bài được nộp tự động vì hết giờ.
+  final bool timedOut;
 
   @override
   State<ExamResultScreen> createState() => _ExamResultScreenState();
@@ -48,6 +51,11 @@ class _ExamResultScreenState extends State<ExamResultScreen> {
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           Text('Điểm: ${score.toStringAsFixed(1)}/10'),
+          if (widget.timedOut)
+            const Padding(
+              padding: EdgeInsets.only(top: 8),
+              child: Text('Hết giờ, bài đã được nộp tự động.'),
+            ),
           const SizedBox(height: 16),
           if (wrong.isEmpty)
             const Text('Bạn trả lời đúng tất cả các câu.')

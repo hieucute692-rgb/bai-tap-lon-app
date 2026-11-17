@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../domain/exam.dart';
+import '../domain/exam_countdown.dart';
 import '../domain/question_bank.dart';
 import 'exam_screen.dart';
 
@@ -39,10 +40,13 @@ class _ExamSetupScreenState extends State<ExamSetupScreen> {
             selected: {count},
             onSelectionChanged: (s) => setState(() => _picked = s.first),
           ),
+          const SizedBox(height: 8),
+          Text('Thời gian làm bài: ${defaultExamDuration(count).inMinutes} phút'),
           const SizedBox(height: 16),
           const Text(
             'Câu hỏi được bốc ngẫu nhiên, số câu mỗi khối tỉ lệ với số câu của khối đó. '
-            'Đáp án chỉ hiện sau khi nộp bài; câu bỏ trống tính là sai.',
+            'Đáp án chỉ hiện sau khi nộp bài; câu bỏ trống tính là sai. '
+            'Hết giờ, bài được nộp tự động.',
           ),
           const SizedBox(height: 24),
           FilledButton(
@@ -50,7 +54,10 @@ class _ExamSetupScreenState extends State<ExamSetupScreen> {
               final questions = buildExam(widget.bank, count: count);
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
-                  builder: (_) => ExamScreen(questions: questions),
+                  builder: (_) => ExamScreen(
+                    questions: questions,
+                    duration: defaultExamDuration(questions.length),
+                  ),
                 ),
               );
             },

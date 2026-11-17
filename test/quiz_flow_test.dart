@@ -43,23 +43,84 @@ void main() {
     expect(find.text('Đúng 1/1 câu'), findsOneWidget);
   });
 
-  testWidgets('thi thử: nộp bài có xác nhận, chấm và lưu kết quả', (tester) async {
-    final progress = ProgressController(FakeProgressRepository());
+  // Lưu ý: khi đồng hồ đang chạy, tránh pumpAndSettle vì Timer 1 giây liên tục xin vẽ lại.
+  group('thi thử có đồng hồ', () {
+    late DateTime now;
+    late ProgressController progress;
     final questions = [sampleQuestion(id: 1), sampleQuestion(id: 2)];
-    await tester.pumpWidget(wrap(progress, ExamScreen(questions: questions)));
 
-    await tester.tap(find.text('Đáp án A')); // câu 1 đúng; câu 2 bỏ trống
-    await tester.pump();
-    await tester.tap(find.widgetWithText(TextButton, 'Nộp bài'));
-    await tester.pumpAndSettle();
-    expect(find.text('Còn 1 câu chưa trả lời, sẽ tính là sai.'), findsOneWidget);
+    Future<void> openExam(WidgetTester tester) async {
+      now = DateTime(2026, 1, 1, 8);
+      progress = ProgressController(FakeProgressRepository());
+      await tester.pumpWidget(
+        wrap(
+          progress,
+          ExamScreen(
+            questions: questions,
+            duration: const Duration(minutes: 3),
+            clock: () => now,
+          ),
+        ),
+      );
+    }
 
-    await tester.tap(find.widgetWithText(FilledButton, 'Nộp bài'));
-    await tester.pumpAndSettle();
+    testWidgets('hiện thời gian còn lại và giảm theo từng giây', (tester) async {
+      await openExam(tester);
+      expect(find.text('Còn lại 03:00'), findsOneWidget);
 
-    expect(find.text('Đúng 1/2 câu'), findsOneWidget);
-    expect(progress.examResults, hasLength(1));
-    expect(progress.stats[2]!.lastCorrect, isFalse);
+      now = now.add(const Duration(seconds: 1));
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.text('Còn lại 02:59'), findsOneWidget);
+    });
+
+    testWidgets('nộp bài có xác nhận, chấm và lưu kết quả', (tester) async {
+      await openExam(tester);
+
+      await tester.tap(find.text('Đáp án A')); // câu 1 đúng; câu 2 bỏ trống
+      await tester.pump();
+      await tester.tap(find.widgetWithText(TextButton, 'Nộp bài'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.text('Còn 1 câu chưa trả lời, sẽ tính là sai.'), findsOneWidget);
+
+      await tester.tap(find.widgetWithText(FilledButton, 'Nộp bài'));
+      await tester.pumpAndSettle(); // đồng hồ đã dừng nên chờ được
+
+      expect(find.text('Đúng 1/2 câu'), findsOneWidget);
+      expect(find.text('Hết giờ, bài đã được nộp tự động.'), findsNothing);
+      expect(progress.examResults, hasLength(1));
+      expect(progress.stats[2]!.lastCorrect, isFalse);
+    });
+
+    testWidgets('hết giờ thì tự nộp và báo trên màn kết quả', (tester) async {
+      await openExam(tester);
+      await tester.tap(find.text('Đáp án A'));
+      await tester.pump();
+
+      now = now.add(const Duration(minutes: 3, seconds: 1));
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Hết giờ, bài đã được nộp tự động.'), findsOneWidget);
+      expect(find.text('Đúng 1/2 câu'), findsOneWidget);
+      expect(progress.examResults, hasLength(1));
+    });
+
+    testWidgets('hết giờ khi hộp xác nhận đang mở: đóng hộp và nộp một lần', (tester) async {
+      await openExam(tester);
+      await tester.tap(find.widgetWithText(TextButton, 'Nộp bài'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.text('Nộp bài?'), findsOneWidget);
+
+      now = now.add(const Duration(minutes: 3, seconds: 1));
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Nộp bài?'), findsNothing);
+      expect(find.text('Hết giờ, bài đã được nộp tự động.'), findsOneWidget);
+      expect(progress.examResults, hasLength(1));
+    });
   });
 
   testWidgets('thống kê: chưa làm câu nào hiện trạng thái trống có lối ra', (tester) async {
