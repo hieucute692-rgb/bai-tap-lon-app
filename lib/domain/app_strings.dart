@@ -85,6 +85,10 @@ class AppStrings {
         '$n unanswered; they will count as wrong.',
       );
   String get keepGoing => _t('Làm tiếp', 'Keep going');
+  String get cannotLeaveExam => _t(
+        'Bạn đang làm bài thi nên chưa thể thoát. Hãy nộp bài để kết thúc.',
+        'You are in the middle of an exam and cannot leave yet. Submit to finish.',
+      );
   String examQuestionHeader(int index, int total) =>
       _t('Câu $index/$total', 'Question $index/$total');
   String get questionPosition => _t('Vị trí câu hỏi', 'Question position');

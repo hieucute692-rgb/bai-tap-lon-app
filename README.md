@@ -4,7 +4,7 @@
 App ôn tập 300 câu trắc nghiệm Flutter song ngữ Anh – Việt, chia thành 20 khối kiến thức.
 Đã có: nạp dữ liệu từ JSON, luyện tập theo khối (đúng/sai và giải thích ngay), thi thử bốc đề theo tỉ lệ các khối,
 thống kê theo khối, làm lại câu sai, giao diện hai ngôn ngữ Việt/Anh: chọn ngôn ngữ hiển thị ngay ở trang chủ (đổi cả chữ trên giao diện lẫn nội dung câu hỏi), được nhớ sau khi thoát app, vẫn đổi nhanh được khi làm bài,
-đồng hồ đếm ngược khi thi thử (90 giây/câu, 30 câu = 45 phút; hết giờ tự nộp).
+đồng hồ đếm ngược khi thi thử (90 giây/câu, 30 câu = 45 phút; hết giờ tự nộp), và khóa thoát khi đang thi: chỉ ra khỏi bài thi được bằng cách nộp bài hoặc hết giờ.
 Lưu ý: chữ do hệ thống Android tạo ra (ví dụ gợi ý của nút quay lại) vẫn theo ngôn ngữ của điện thoại.
 
 ## Cài đặt
