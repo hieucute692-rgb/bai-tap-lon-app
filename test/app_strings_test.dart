@@ -48,6 +48,7 @@ void main() {
       (vi.retryWrong, en.retryWrong),
       (vi.examRules, en.examRules),
       (vi.timedOutNote, en.timedOutNote),
+      (vi.cannotLeaveExam, en.cannotLeaveExam),
       (vi.progressSaveProblem, en.progressSaveProblem),
     ];
     for (final (a, b) in pairs) {

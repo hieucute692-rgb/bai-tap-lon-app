@@ -153,6 +153,95 @@ void main() {
     });
   });
 
+  group('không thoát được khi đang thi', () {
+    final questions = [sampleQuestion(id: 1), sampleQuestion(id: 2)];
+
+    // Trang "mở" có nút đẩy ExamScreen lên, để kiểm tra việc quay lại thật sự.
+    Future<ProgressController> openExamFromHome(WidgetTester tester) async {
+      final progress = ProgressController(FakeProgressRepository());
+      await tester.pumpWidget(
+        wrap(
+          progress,
+          Builder(
+            builder: (context) => Scaffold(
+              body: Center(
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => ExamScreen(
+                        questions: questions,
+                        duration: const Duration(minutes: 3),
+                      ),
+                    ),
+                  ),
+                  child: const Text('mở'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('mở'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      return progress;
+    }
+
+    testWidgets('không có nút quay lại trên thanh tiêu đề', (tester) async {
+      await openExamFromHome(tester);
+      expect(find.byType(ExamScreen), findsOneWidget);
+      expect(find.byType(BackButton), findsNothing);
+    });
+
+    testWidgets('bấm quay lại: vẫn ở trong bài thi, hiện hộp nộp bài kèm giải thích',
+        (tester) async {
+      await openExamFromHome(tester);
+
+      await tester.binding.handlePopRoute(); // như bấm nút/vuốt quay lại của hệ thống
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.byType(ExamScreen), findsOneWidget);
+      expect(find.text('Nộp bài?'), findsOneWidget);
+      expect(
+        find.textContaining('Bạn đang làm bài thi nên chưa thể thoát.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('chọn Làm tiếp thì ở lại bài thi', (tester) async {
+      await openExamFromHome(tester);
+      await tester.binding.handlePopRoute();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      await tester.tap(find.text('Làm tiếp'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('Nộp bài?'), findsNothing);
+      expect(find.byType(ExamScreen), findsOneWidget);
+    });
+
+    testWidgets('chỉ thoát được sau khi nộp bài, rồi về lại trang đầu', (tester) async {
+      final progress = await openExamFromHome(tester);
+      await tester.binding.handlePopRoute();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      await tester.tap(find.widgetWithText(FilledButton, 'Nộp bài'));
+      await tester.pumpAndSettle(); // đồng hồ đã dừng khi nộp bài
+
+      expect(find.byType(ExamScreen), findsNothing);
+      expect(find.text('Đúng 0/2 câu'), findsOneWidget);
+      expect(progress.examResults, hasLength(1));
+
+      await tester.tap(find.text('Về trang chủ'));
+      await tester.pumpAndSettle();
+      expect(find.text('mở'), findsOneWidget);
+    });
+  });
+
   testWidgets('thống kê: chưa làm câu nào hiện trạng thái trống có lối ra', (tester) async {
     final progress = ProgressController(FakeProgressRepository());
     progress.load();

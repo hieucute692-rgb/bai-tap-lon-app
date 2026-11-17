@@ -16,7 +16,8 @@ import 'widgets/option_tile.dart';
 import 'widgets/question_text.dart';
 
 /// Làm bài thi thử có đồng hồ đếm ngược: chọn/đổi đáp án tự do, không hiện đúng sai cho tới
-/// khi nộp bài. Hết giờ thì tự nộp.
+/// khi nộp bài. Hết giờ thì tự nộp. Không thoát ra ngoài được cho tới khi nộp bài: nút quay
+/// lại và cử chỉ vuốt lùi chỉ mở hộp thoại nộp bài.
 class ExamScreen extends StatefulWidget {
   const ExamScreen({
     super.key,
@@ -94,16 +95,22 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
     );
   }
 
-  Future<void> _submit() async {
+  /// [fromBack]: người dùng bấm quay lại; giải thích vì sao chưa thoát được rồi hỏi nộp bài.
+  Future<void> _submit({bool fromBack = false}) async {
     if (_submitted) return;
     final s = context.stringsNow;
     final unanswered = _session.unansweredCount;
+    final message = unanswered == 0 ? s.allAnswered : s.unansweredWarning(unanswered);
     _dialogOpen = true;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(s.submitQuestion),
-        content: Text(unanswered == 0 ? s.allAnswered : s.unansweredWarning(unanswered)),
+        content: Text(
+          fromBack
+              ? '${s.cannotLeaveExam}\n\n$message'
+              : message,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -132,8 +139,14 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
     final selected = _session.answerOf(q);
     final now = _now();
 
-    return Scaffold(
+    return PopScope(
+      canPop: false, // chỉ thoát được bằng cách nộp bài (hoặc khi hết giờ)
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _submit(fromBack: true);
+      },
+      child: Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Text(s.exam),
         actions: [
           LanguageToggle(language: lang, onChanged: settings.setLanguage),
@@ -199,6 +212,7 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
           ),
         ],
       ),
+    ),
     );
   }
 }
