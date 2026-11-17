@@ -5,10 +5,17 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'fakes.dart';
 
+Future<ControlledRepository> pumpApp(WidgetTester tester) async {
+  final repo = ControlledRepository();
+  await tester.pumpWidget(
+    QuizApp(repository: repo, progressRepository: FakeProgressRepository()),
+  );
+  return repo;
+}
+
 void main() {
-  testWidgets('đang tải rồi hiện danh sách khối', (tester) async {
-    final repo = ControlledRepository();
-    await tester.pumpWidget(QuizApp(repository: repo));
+  testWidgets('đang tải rồi hiện menu chức năng', (tester) async {
+    final repo = await pumpApp(tester);
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
     repo.completeLast(sampleBank());
@@ -17,12 +24,14 @@ void main() {
 
     expect(find.byType(CircularProgressIndicator), findsNothing);
     expect(find.text('3 câu · 2 khối kiến thức'), findsOneWidget);
-    expect(find.text('Khối 1'), findsOneWidget);
+    expect(find.text('Luyện tập'), findsOneWidget);
+    expect(find.text('Thi thử'), findsOneWidget);
+    expect(find.text('Thống kê'), findsOneWidget);
+    expect(find.text('Làm lại câu sai'), findsOneWidget);
   });
 
-  testWidgets('lỗi có nút Thử lại dẫn tới danh sách', (tester) async {
-    final repo = ControlledRepository();
-    await tester.pumpWidget(QuizApp(repository: repo));
+  testWidgets('lỗi có nút Thử lại dẫn tới menu', (tester) async {
+    final repo = await pumpApp(tester);
     repo.failLast();
     await tester.pump();
     await tester.pump();
@@ -36,17 +45,31 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    expect(find.text('Khối 1'), findsOneWidget);
+    expect(find.text('Luyện tập'), findsOneWidget);
   });
 
   testWidgets('chưa có dữ liệu hiện trạng thái trống có nút Tải lại', (tester) async {
-    final repo = ControlledRepository();
-    await tester.pumpWidget(QuizApp(repository: repo));
+    final repo = await pumpApp(tester);
     repo.completeLast(QuestionBank(const []));
     await tester.pump();
     await tester.pump();
 
     expect(find.text('Chưa có câu hỏi nào.'), findsOneWidget);
     expect(find.text('Tải lại'), findsOneWidget);
+  });
+
+  testWidgets('chưa có câu sai: báo bằng thông báo, không mở màn hình', (tester) async {
+    final repo = await pumpApp(tester);
+    repo.completeLast(sampleBank());
+    await tester.pump();
+    await tester.pump();
+
+    await tester.tap(find.text('Làm lại câu sai'));
+    await tester.pump();
+
+    expect(
+      find.text('Chưa có câu sai nào. Hãy luyện tập hoặc thi thử trước.'),
+      findsOneWidget,
+    );
   });
 }
