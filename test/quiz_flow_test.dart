@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quiz_300/domain/question.dart';
+import 'package:flutter_quiz_300/presentation/bookmark_controller.dart';
+import 'package:flutter_quiz_300/presentation/bookmarks_screen.dart';
 import 'package:flutter_quiz_300/presentation/exam_screen.dart';
 import 'package:flutter_quiz_300/presentation/practice_screen.dart';
 import 'package:flutter_quiz_300/presentation/progress_controller.dart';
@@ -10,12 +12,20 @@ import 'package:provider/provider.dart';
 
 import 'fakes.dart';
 
-Widget wrap(ProgressController progress, Widget child, {SettingsController? settings}) =>
+Widget wrap(
+  ProgressController progress,
+  Widget child, {
+  SettingsController? settings,
+  BookmarkController? bookmarks,
+}) =>
     MultiProvider(
       providers: [
         ChangeNotifierProvider<ProgressController>.value(value: progress),
         ChangeNotifierProvider<SettingsController>.value(
           value: settings ?? SettingsController(FakeSettingsRepository()),
+        ),
+        ChangeNotifierProvider<BookmarkController>.value(
+          value: bookmarks ?? BookmarkController(FakeBookmarkRepository()),
         ),
       ],
       child: MaterialApp(home: child),
@@ -239,6 +249,138 @@ void main() {
       await tester.tap(find.text('Về trang chủ'));
       await tester.pumpAndSettle();
       expect(find.text('mở'), findsOneWidget);
+    });
+  });
+
+  group('đánh dấu câu hỏi', () {
+    testWidgets('luyện tập: bấm đánh dấu rồi bấm lại để bỏ, có lưu xuống máy', (tester) async {
+      final repo = FakeBookmarkRepository();
+      final bookmarks = BookmarkController(repo);
+      await tester.pumpWidget(
+        wrap(
+          ProgressController(FakeProgressRepository()),
+          PracticeScreen(titleOf: (_) => 'Thử', questions: [sampleQuestion(id: 1)]),
+          bookmarks: bookmarks,
+        ),
+      );
+
+      expect(find.byIcon(Icons.bookmark_border), findsOneWidget);
+      await tester.tap(find.byIcon(Icons.bookmark_border));
+      await tester.pump();
+      expect(bookmarks.isBookmarked(1), isTrue);
+      expect(repo.saved, {1});
+      expect(find.byIcon(Icons.bookmark), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.bookmark));
+      await tester.pump();
+      expect(bookmarks.isBookmarked(1), isFalse);
+      expect(repo.saved, isEmpty);
+    });
+
+    testWidgets('thi thử: đánh dấu câu đang làm', (tester) async {
+      final bookmarks = BookmarkController(FakeBookmarkRepository());
+      await tester.pumpWidget(
+        wrap(
+          ProgressController(FakeProgressRepository()),
+          ExamScreen(
+            questions: [sampleQuestion(id: 1), sampleQuestion(id: 2)],
+            duration: const Duration(minutes: 3),
+          ),
+          bookmarks: bookmarks,
+        ),
+      );
+
+      await tester.tap(find.byIcon(Icons.bookmark_border));
+      await tester.pump();
+      expect(bookmarks.ids, {1});
+    });
+
+    testWidgets('mục Đánh dấu liệt kê đúng các câu đã chọn', (tester) async {
+      final bookmarks = BookmarkController(FakeBookmarkRepository(saved: {1, 3}));
+      bookmarks.load();
+      await tester.pumpWidget(
+        wrap(
+          ProgressController(FakeProgressRepository()),
+          BookmarksScreen(bank: sampleBank()),
+          bookmarks: bookmarks,
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.text('Câu 1'), findsOneWidget);
+      expect(find.text('Câu 3'), findsOneWidget);
+      expect(find.text('Câu 2'), findsNothing);
+      expect(find.text('Luyện tập các câu đã đánh dấu'), findsOneWidget);
+    });
+
+    testWidgets('bỏ đánh dấu trong mục Đánh dấu thì câu biến mất', (tester) async {
+      final repo = FakeBookmarkRepository(saved: {1, 3});
+      final bookmarks = BookmarkController(repo);
+      bookmarks.load();
+      await tester.pumpWidget(
+        wrap(
+          ProgressController(FakeProgressRepository()),
+          BookmarksScreen(bank: sampleBank()),
+          bookmarks: bookmarks,
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      await tester.tap(find.text('Câu 1'));
+      await tester.pumpAndSettle();
+      expect(find.text('Giải thích 1'), findsOneWidget); // xem lại kèm giải thích
+
+      await tester.tap(find.text('Bỏ đánh dấu'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Câu 1'), findsNothing);
+      expect(find.text('Câu 3'), findsOneWidget);
+      expect(bookmarks.ids, {3});
+      expect(repo.saved, {3});
+    });
+
+    testWidgets('xóa hết đánh dấu thì hiện trạng thái trống có lối ra', (tester) async {
+      final bookmarks = BookmarkController(FakeBookmarkRepository(saved: {2}));
+      bookmarks.load();
+      await tester.pumpWidget(
+        wrap(
+          ProgressController(FakeProgressRepository()),
+          BookmarksScreen(bank: sampleBank()),
+          bookmarks: bookmarks,
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      await tester.tap(find.text('Câu 2'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Bỏ đánh dấu'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Chưa có câu nào được đánh dấu.'), findsOneWidget);
+      expect(find.text('Quay lại'), findsOneWidget);
+    });
+
+    testWidgets('luyện tập các câu đã đánh dấu chỉ gồm những câu đó', (tester) async {
+      final bookmarks = BookmarkController(FakeBookmarkRepository(saved: {3}));
+      bookmarks.load();
+      await tester.pumpWidget(
+        wrap(
+          ProgressController(FakeProgressRepository()),
+          BookmarksScreen(bank: sampleBank()),
+          bookmarks: bookmarks,
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      await tester.tap(find.text('Luyện tập các câu đã đánh dấu'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Câu đã đánh dấu'), findsOneWidget); // tiêu đề màn hình luyện tập
+      expect(find.text('Câu hỏi 3'), findsOneWidget);
     });
   });
 

@@ -10,6 +10,7 @@ import 'exam_result_screen.dart';
 import 'progress_controller.dart';
 import 'settings_controller.dart';
 import 'strings_context.dart';
+import 'widgets/bookmark_button.dart';
 import 'widgets/exam_timer_bar.dart';
 import 'widgets/language_toggle.dart';
 import 'widgets/option_tile.dart';
@@ -171,11 +172,17 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
               key: ValueKey(_index),
               padding: const EdgeInsets.all(16),
               children: [
-                Text(
-                  s.examQuestionHeader(_index + 1, total),
-                  style: Theme.of(context).textTheme.labelLarge,
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        s.examQuestionHeader(_index + 1, total),
+                        style: Theme.of(context).textTheme.labelLarge,
+                      ),
+                    ),
+                    BookmarkButton(questionId: q.id),
+                  ],
                 ),
-                const SizedBox(height: 8),
                 QuestionText(q.questionFor(lang)),
                 const SizedBox(height: 12),
                 for (var i = 0; i < options.length; i++)

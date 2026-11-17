@@ -7,6 +7,7 @@ import '../domain/question.dart';
 import 'progress_controller.dart';
 import 'settings_controller.dart';
 import 'strings_context.dart';
+import 'widgets/bookmark_button.dart';
 import 'widgets/explanation_card.dart';
 import 'widgets/language_toggle.dart';
 import 'widgets/option_tile.dart';
@@ -89,11 +90,17 @@ class _PracticeScreenState extends State<PracticeScreen> {
               key: ValueKey(_session.index),
               padding: const EdgeInsets.all(16),
               children: [
-                Text(
-                  s.practiceQuestionHeader(_session.index + 1, total, q.blockId),
-                  style: Theme.of(context).textTheme.labelLarge,
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        s.practiceQuestionHeader(_session.index + 1, total, q.blockId),
+                        style: Theme.of(context).textTheme.labelLarge,
+                      ),
+                    ),
+                    BookmarkButton(questionId: q.id),
+                  ],
                 ),
-                const SizedBox(height: 8),
                 QuestionText(q.questionFor(lang)),
                 const SizedBox(height: 12),
                 for (var i = 0; i < options.length; i++)

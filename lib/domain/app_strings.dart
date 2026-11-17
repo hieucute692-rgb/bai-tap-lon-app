@@ -54,6 +54,33 @@ class AppStrings {
         'No wrong answers yet. Practice or take a mock exam first.',
       );
 
+  // ---- Đánh dấu ----
+  String get bookmarks => _t('Đánh dấu', 'Bookmarks');
+  String get bookmarksSubtitle =>
+      _t('Các câu bạn đã đánh dấu để xem lại', 'Questions you saved to review later');
+  String get noBookmarksSubtitle => _t('Chưa có câu nào', 'None yet');
+  String bookmarkedCount(int n) => _t('$n câu đã đánh dấu', '$n bookmarked');
+  String get bookmarkTooltip => _t('Đánh dấu câu này', 'Bookmark this question');
+  String get removeBookmark => _t('Bỏ đánh dấu', 'Remove bookmark');
+  String get bookmarksEmpty =>
+      _t('Chưa có câu nào được đánh dấu.', 'No bookmarked questions yet.');
+  String get bookmarksEmptyHint => _t(
+        'Bấm biểu tượng đánh dấu khi luyện tập hoặc thi thử để lưu câu vào đây.',
+        'Tap the bookmark icon while practicing or taking a mock exam to save a question here.',
+      );
+  String get practiceBookmarked =>
+      _t('Luyện tập các câu đã đánh dấu', 'Practice bookmarked questions');
+  String get bookmarkedQuestionsTitle => _t('Câu đã đánh dấu', 'Bookmarked questions');
+  String get bookmarkLoadProblem => _t(
+        'Không đọc được các câu đã đánh dấu trên máy.',
+        'Could not read the bookmarks saved on this device.',
+      );
+  String get bookmarkSaveProblem => _t(
+        'Không lưu được các câu đã đánh dấu; chúng sẽ mất khi thoát app.',
+        'Could not save bookmarks; they will be lost when you leave the app.',
+      );
+  String get goBack => _t('Quay lại', 'Go back');
+
   // ---- Luyện tập ----
   String get practiceAll => _t('Luyện tập tất cả', 'Practice all');
   String get allBlocks => _t('Tất cả các khối', 'All blocks');

@@ -26,6 +26,13 @@ void main() {
     expect(en.timeLeft('45:00'), 'Time left 45:00');
   });
 
+  test('chuỗi mục đánh dấu', () {
+    expect(vi.bookmarks, 'Đánh dấu');
+    expect(en.bookmarks, 'Bookmarks');
+    expect(vi.bookmarkedCount(5), '5 câu đã đánh dấu');
+    expect(en.bookmarkedCount(5), '5 bookmarked');
+  });
+
   test('chuỗi thống kê nhiều tham số', () {
     expect(
       vi.blockStatsLine(percent: 75, correct: 15, attempts: 20, answered: 12, total: 20, wrong: 3),
@@ -49,6 +56,9 @@ void main() {
       (vi.examRules, en.examRules),
       (vi.timedOutNote, en.timedOutNote),
       (vi.cannotLeaveExam, en.cannotLeaveExam),
+      (vi.bookmarks, en.bookmarks),
+      (vi.bookmarksEmptyHint, en.bookmarksEmptyHint),
+      (vi.bookmarkSaveProblem, en.bookmarkSaveProblem),
       (vi.progressSaveProblem, en.progressSaveProblem),
     ];
     for (final (a, b) in pairs) {
