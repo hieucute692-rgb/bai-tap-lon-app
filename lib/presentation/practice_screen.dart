@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../domain/practice_session.dart';
 import '../domain/question.dart';
 import 'progress_controller.dart';
+import 'settings_controller.dart';
 import 'widgets/explanation_card.dart';
 import 'widgets/language_toggle.dart';
 import 'widgets/option_tile.dart';
@@ -23,7 +24,6 @@ class PracticeScreen extends StatefulWidget {
 
 class _PracticeScreenState extends State<PracticeScreen> {
   late final PracticeSession _session = PracticeSession(widget.questions);
-  ContentLanguage _lang = ContentLanguage.vi;
   bool _finished = false;
 
   void _select(int option) {
@@ -52,6 +52,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsController>();
+    final lang = settings.language;
     if (_finished) {
       return _PracticeSummary(
         correct: _session.correctCount,
@@ -60,14 +62,14 @@ class _PracticeScreenState extends State<PracticeScreen> {
     }
     final q = _session.current;
     final chosen = _session.chosen;
-    final options = q.optionsFor(_lang);
+    final options = q.optionsFor(lang);
     final total = _session.questions.length;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
         actions: [
-          LanguageToggle(language: _lang, onChanged: (l) => setState(() => _lang = l)),
+          LanguageToggle(language: lang, onChanged: settings.setLanguage),
         ],
       ),
       body: Column(
@@ -86,7 +88,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                   style: Theme.of(context).textTheme.labelLarge,
                 ),
                 const SizedBox(height: 8),
-                QuestionText(q.questionFor(_lang)),
+                QuestionText(q.questionFor(lang)),
                 const SizedBox(height: 12),
                 for (var i = 0; i < options.length; i++)
                   OptionTile(
@@ -95,7 +97,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                     state: _stateOf(i, q, chosen),
                     onTap: chosen == null ? () => _select(i) : null,
                   ),
-                if (chosen != null) ExplanationCard(text: q.explanationFor(_lang)),
+                if (chosen != null) ExplanationCard(text: q.explanationFor(lang)),
               ],
             ),
           ),

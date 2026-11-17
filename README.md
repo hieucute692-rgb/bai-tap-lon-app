@@ -3,9 +3,9 @@
 ## Mục đích
 App ôn tập 300 câu trắc nghiệm Flutter song ngữ Anh – Việt, chia thành 20 khối kiến thức.
 Đã có: nạp dữ liệu từ JSON, luyện tập theo khối (đúng/sai và giải thích ngay), thi thử bốc đề theo tỉ lệ các khối,
-thống kê theo khối, làm lại câu sai, nút đổi nhanh VI/EN khi làm bài,
+thống kê theo khối, làm lại câu sai, chọn ngôn ngữ câu hỏi (Việt/Anh) ngay ở trang chủ, được nhớ sau khi thoát app (vẫn đổi nhanh được khi làm bài),
 đồng hồ đếm ngược khi thi thử (90 giây/câu, 30 câu = 45 phút; hết giờ tự nộp).
-Chưa làm: lưu lựa chọn ngôn ngữ và giao diện hai ngôn ngữ.
+Chưa làm: dịch chữ trên giao diện (menu, nút) sang tiếng Anh; hiện chỉ nội dung câu hỏi, đáp án, giải thích và tên khối đổi theo ngôn ngữ.
 
 ## Cài đặt
 ```bash
@@ -30,7 +30,7 @@ flutter test
 ## Dữ liệu lưu ở đâu
 Ngân hàng câu hỏi nằm trong assets của app. Tiến độ làm bài (mỗi câu: số lượt, số lượt đúng, lần gần nhất đúng/sai;
 và tối đa 20 lần thi gần nhất) lưu cục bộ trên máy bằng shared_preferences, không gửi đi đâu.
-Dữ liệu chỉ tối đa 300 bản ghi nhỏ nên không cần cơ sở dữ liệu. App không dùng khoá API và không xin quyền hệ thống.
+Lựa chọn ngôn ngữ cũng lưu ở đây. Dữ liệu chỉ tối đa 300 bản ghi nhỏ nên không cần cơ sở dữ liệu. App không dùng khoá API và không xin quyền hệ thống.
 
 ## Dùng AI
 Công cụ: Claude. Hỗ trợ: dựng khung project, model/repository và test ban đầu. Hội thoại quan trọng lưu trong `docs/ai/`.

@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_quiz_300/domain/question.dart';
 import 'package:flutter_quiz_300/domain/question_bank.dart';
 import 'package:flutter_quiz_300/main.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'fakes.dart';
 
-Future<ControlledRepository> pumpApp(WidgetTester tester) async {
+Future<ControlledRepository> pumpApp(
+  WidgetTester tester, {
+  FakeSettingsRepository? settings,
+}) async {
   final repo = ControlledRepository();
   await tester.pumpWidget(
-    QuizApp(repository: repo, progressRepository: FakeProgressRepository()),
+    QuizApp(
+      repository: repo,
+      progressRepository: FakeProgressRepository(),
+      settingsRepository: settings ?? FakeSettingsRepository(),
+    ),
   );
   return repo;
 }
@@ -71,5 +79,38 @@ void main() {
       find.text('Chưa có câu sai nào. Hãy luyện tập hoặc thi thử trước.'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('chọn English ở trang chủ: lưu lại và áp dụng khi luyện tập', (tester) async {
+    final settings = FakeSettingsRepository();
+    final repo = await pumpApp(tester, settings: settings);
+    repo.completeLast(sampleBank());
+    await tester.pump();
+    await tester.pump();
+
+    await tester.tap(find.text('English'));
+    await tester.pump();
+    expect(settings.saved, ContentLanguage.en);
+
+    await tester.tap(find.text('Luyện tập'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Tất cả các khối'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Question 1'), findsOneWidget);
+    expect(find.text('Option A'), findsOneWidget);
+  });
+
+  testWidgets('ngôn ngữ đã lưu được khôi phục khi mở app', (tester) async {
+    final settings = FakeSettingsRepository(saved: ContentLanguage.en);
+    final repo = await pumpApp(tester, settings: settings);
+    repo.completeLast(sampleBank());
+    await tester.pump();
+    await tester.pump();
+
+    final button = tester.widget<SegmentedButton<ContentLanguage>>(
+      find.byType(SegmentedButton<ContentLanguage>),
+    );
+    expect(button.selected, {ContentLanguage.en});
   });
 }

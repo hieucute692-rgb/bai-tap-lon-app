@@ -5,6 +5,7 @@ import 'package:flutter_quiz_300/domain/progress_repository.dart';
 import 'package:flutter_quiz_300/domain/question.dart';
 import 'package:flutter_quiz_300/domain/question_bank.dart';
 import 'package:flutter_quiz_300/domain/question_repository.dart';
+import 'package:flutter_quiz_300/domain/settings_repository.dart';
 
 Map<String, dynamic> sampleJson({int id = 1, int blockId = 1, int correct = 0}) => {
       'id': id,
@@ -89,5 +90,26 @@ class FakeProgressRepository implements ProgressRepository {
   Future<void> saveExamResults(List<ExamResult> results) async {
     if (failSave) throw Exception('lỗi ghi giả lập');
     savedExams = List.of(results);
+  }
+}
+
+/// Repository cài đặt giả lưu trong bộ nhớ, có thể bật lỗi đọc/ghi.
+class FakeSettingsRepository implements SettingsRepository {
+  FakeSettingsRepository({this.saved, this.failLoad = false, this.failSave = false});
+
+  ContentLanguage? saved;
+  bool failLoad;
+  bool failSave;
+
+  @override
+  Future<ContentLanguage?> loadLanguage() async {
+    if (failLoad) throw Exception('lỗi đọc giả lập');
+    return saved;
+  }
+
+  @override
+  Future<void> saveLanguage(ContentLanguage language) async {
+    if (failSave) throw Exception('lỗi ghi giả lập');
+    saved = language;
   }
 }

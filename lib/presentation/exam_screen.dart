@@ -8,6 +8,7 @@ import '../domain/exam_countdown.dart';
 import '../domain/question.dart';
 import 'exam_result_screen.dart';
 import 'progress_controller.dart';
+import 'settings_controller.dart';
 import 'widgets/exam_timer_bar.dart';
 import 'widgets/language_toggle.dart';
 import 'widgets/option_tile.dart';
@@ -38,7 +39,6 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
   late final DateTime Function() _now;
   late final ExamCountdown _countdown;
   Timer? _ticker;
-  ContentLanguage _lang = ContentLanguage.vi;
   int _index = 0;
   bool _submitted = false;
   bool _dialogOpen = false;
@@ -125,9 +125,11 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsController>();
+    final lang = settings.language;
     final total = _session.questions.length;
     final q = _session.questions[_index];
-    final options = q.optionsFor(_lang);
+    final options = q.optionsFor(lang);
     final selected = _session.answerOf(q);
     final now = _now();
 
@@ -135,7 +137,7 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
       appBar: AppBar(
         title: const Text('Thi thử'),
         actions: [
-          LanguageToggle(language: _lang, onChanged: (l) => setState(() => _lang = l)),
+          LanguageToggle(language: lang, onChanged: settings.setLanguage),
           TextButton(onPressed: _submit, child: const Text('Nộp bài')),
           const SizedBox(width: 8),
         ],
@@ -162,7 +164,7 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                   style: Theme.of(context).textTheme.labelLarge,
                 ),
                 const SizedBox(height: 8),
-                QuestionText(q.questionFor(_lang)),
+                QuestionText(q.questionFor(lang)),
                 const SizedBox(height: 12),
                 for (var i = 0; i < options.length; i++)
                   OptionTile(

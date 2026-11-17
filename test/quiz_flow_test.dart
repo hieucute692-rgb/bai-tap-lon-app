@@ -1,16 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_quiz_300/domain/question.dart';
 import 'package:flutter_quiz_300/presentation/exam_screen.dart';
 import 'package:flutter_quiz_300/presentation/practice_screen.dart';
 import 'package:flutter_quiz_300/presentation/progress_controller.dart';
+import 'package:flutter_quiz_300/presentation/settings_controller.dart';
 import 'package:flutter_quiz_300/presentation/stats_screen.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 import 'fakes.dart';
 
-Widget wrap(ProgressController progress, Widget child) =>
-    ChangeNotifierProvider<ProgressController>.value(
-      value: progress,
+Widget wrap(ProgressController progress, Widget child, {SettingsController? settings}) =>
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider<ProgressController>.value(value: progress),
+        ChangeNotifierProvider<SettingsController>.value(
+          value: settings ?? SettingsController(FakeSettingsRepository()),
+        ),
+      ],
       child: MaterialApp(home: child),
     );
 
@@ -27,6 +34,27 @@ void main() {
 
     expect(find.text('Giải thích 1'), findsOneWidget);
     expect(progress.stats[1]!.lastCorrect, isFalse);
+  });
+
+  testWidgets('luyện tập: đổi ngôn ngữ trong lúc làm cũng đổi cài đặt chung', (tester) async {
+    final progress = ProgressController(FakeProgressRepository());
+    final settingsRepo = FakeSettingsRepository();
+    final settings = SettingsController(settingsRepo);
+    await tester.pumpWidget(
+      wrap(
+        progress,
+        PracticeScreen(title: 'Thử', questions: [sampleQuestion(id: 1)]),
+        settings: settings,
+      ),
+    );
+
+    expect(find.text('Câu hỏi 1'), findsOneWidget);
+    await tester.tap(find.text('EN'));
+    await tester.pump();
+
+    expect(find.text('Question 1'), findsOneWidget);
+    expect(settings.language, ContentLanguage.en);
+    expect(settingsRepo.saved, ContentLanguage.en);
   });
 
   testWidgets('luyện tập: làm xong hiện tổng kết', (tester) async {
