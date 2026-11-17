@@ -4,8 +4,6 @@ import '../domain/progress.dart';
 import '../domain/progress_repository.dart';
 import 'question_bank_controller.dart';
 
-/// Giữ tiến độ làm bài trong bộ nhớ và ghi xuống máy. Lỗi đọc/ghi không làm app dừng:
-/// app vẫn dùng được và [problem] cho giao diện biết để báo người dùng.
 class ProgressController extends ChangeNotifier {
   ProgressController(this._repository, {DateTime Function()? clock})
       : _clock = clock ?? DateTime.now;
