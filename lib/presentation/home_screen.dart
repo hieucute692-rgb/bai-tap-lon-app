@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../domain/progress_stats.dart';
 import '../domain/question_bank.dart';
-import 'block_screen.dart';
+import 'exam_setup_screen.dart';
+import 'practice_screen.dart';
+import 'practice_setup_screen.dart';
+import 'progress_controller.dart';
 import 'question_bank_controller.dart';
+import 'stats_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -28,42 +33,96 @@ class HomeScreen extends StatelessWidget {
                 actionLabel: 'Tải lại',
                 onAction: c.load,
               )
-            : _BlockList(bank: c.bank!),
+            : _Menu(bank: c.bank!),
       },
     );
   }
 }
 
-class _BlockList extends StatelessWidget {
-  const _BlockList({required this.bank});
+class _Menu extends StatelessWidget {
+  const _Menu({required this.bank});
 
   final QuestionBank bank;
 
+  void _push(BuildContext context, Widget screen) {
+    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => screen));
+  }
+
   @override
   Widget build(BuildContext context) {
+    final progress = context.watch<ProgressController>();
+    final wrong = wrongQuestions(bank, progress.stats);
     return ListView(
+      padding: const EdgeInsets.all(16),
       children: [
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: Text(
-            '${bank.questions.length} câu · ${bank.blocks.length} khối kiến thức',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
+        Text(
+          '${bank.questions.length} câu · ${bank.blocks.length} khối kiến thức',
+          style: Theme.of(context).textTheme.titleMedium,
         ),
-        for (final b in bank.blocks)
-          ListTile(
-            minVerticalPadding: 12,
-            leading: CircleAvatar(child: Text('${b.id}')),
-            title: Text(b.nameVi),
-            subtitle: Text('${b.nameEn} · ${b.questionCount} câu'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => BlockScreen(bank: bank, block: b),
-              ),
-            ),
-          ),
+        const SizedBox(height: 12),
+        _MenuCard(
+          icon: Icons.menu_book_outlined,
+          title: 'Luyện tập',
+          subtitle: 'Làm theo khối, biết đúng sai và xem giải thích ngay',
+          onTap: () => _push(context, PracticeSetupScreen(bank: bank)),
+        ),
+        _MenuCard(
+          icon: Icons.timer_outlined,
+          title: 'Thi thử',
+          subtitle: 'Bốc ngẫu nhiên theo tỉ lệ các khối, chấm khi nộp bài',
+          onTap: () => _push(context, ExamSetupScreen(bank: bank)),
+        ),
+        _MenuCard(
+          icon: Icons.bar_chart,
+          title: 'Thống kê',
+          subtitle: 'Tỉ lệ đúng theo từng khối và lịch sử thi thử',
+          onTap: () => _push(context, StatsScreen(bank: bank)),
+        ),
+        _MenuCard(
+          icon: Icons.replay,
+          title: 'Làm lại câu sai',
+          subtitle: wrong.isEmpty ? 'Chưa có câu sai' : '${wrong.length} câu đang sai',
+          onTap: () {
+            if (wrong.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Chưa có câu sai nào. Hãy luyện tập hoặc thi thử trước.'),
+                ),
+              );
+              return;
+            }
+            _push(context, PracticeScreen(title: 'Làm lại câu sai', questions: wrong));
+          },
+        ),
       ],
+    );
+  }
+}
+
+class _MenuCard extends StatelessWidget {
+  const _MenuCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: ListTile(
+        minVerticalPadding: 16,
+        leading: Icon(icon, size: 32),
+        title: Text(title),
+        subtitle: Text(subtitle),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: onTap,
+      ),
     );
   }
 }

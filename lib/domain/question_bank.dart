@@ -1,6 +1,6 @@
 import 'question.dart';
 
-
+/// Một khối kiến thức (1..20) và số câu của nó.
 class QuestionBlock {
   const QuestionBlock({
     required this.id,
