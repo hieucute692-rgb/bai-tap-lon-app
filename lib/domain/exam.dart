@@ -70,5 +70,8 @@ class ExamSession {
         takenAt: at,
         total: questions.length,
         correct: correctCount,
+        answers: [
+          for (final q in questions) ExamAnswer(questionId: q.id, chosen: answerOf(q)),
+        ],
       );
 }
