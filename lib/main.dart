@@ -9,6 +9,7 @@ import 'domain/bookmark_repository.dart';
 import 'domain/progress_repository.dart';
 import 'domain/question_repository.dart';
 import 'domain/settings_repository.dart';
+import 'presentation/app_theme.dart';
 import 'presentation/bookmark_controller.dart';
 import 'presentation/home_screen.dart';
 import 'presentation/progress_controller.dart';
@@ -49,7 +50,7 @@ class QuizApp extends StatelessWidget {
       ],
       child: MaterialApp(
         title: 'Ôn tập Flutter',
-        theme: ThemeData(colorSchemeSeed: Colors.blue, useMaterial3: true),
+        theme: buildAppTheme(),
         home: const HomeScreen(),
       ),
     );

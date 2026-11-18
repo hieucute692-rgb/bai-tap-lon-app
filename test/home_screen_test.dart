@@ -11,6 +11,10 @@ Future<ControlledRepository> pumpApp(
   FakeSettingsRepository? settings,
   FakeBookmarkRepository? bookmarks,
 }) async {
+  // Màn hình đủ lớn để thấy hết các thẻ, không phải cuộn trong test.
+  tester.view.physicalSize = const Size(800, 1600);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.reset);
   final repo = ControlledRepository();
   await tester.pumpWidget(
     QuizApp(
