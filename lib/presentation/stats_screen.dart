@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../domain/app_strings.dart';
+import '../domain/format.dart';
 import '../domain/progress.dart';
 import '../domain/progress_stats.dart';
 import '../domain/question_bank.dart';
+import 'exam_history_detail_screen.dart';
 import 'progress_controller.dart';
 import 'question_bank_controller.dart';
 import 'settings_controller.dart';
@@ -14,11 +16,6 @@ class StatsScreen extends StatelessWidget {
   const StatsScreen({super.key, required this.bank});
 
   final QuestionBank bank;
-
-  static String _formatTime(DateTime d) {
-    String two(int n) => n.toString().padLeft(2, '0');
-    return '${two(d.day)}/${two(d.month)} ${two(d.hour)}:${two(d.minute)}';
-  }
 
   static String _problemText(ProgressProblem p, AppStrings s) => switch (p) {
         ProgressProblem.loadFailed => s.progressLoadProblem,
@@ -134,7 +131,13 @@ class StatsScreen extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.assignment_turned_in_outlined),
               title: Text(s.examHistoryEntry(r.correct, r.total, r.score10.toStringAsFixed(1))),
-              subtitle: Text(_formatTime(r.takenAt)),
+              subtitle: Text('${formatDayTime(r.takenAt)} · ${s.tapToReview}'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => ExamHistoryDetailScreen(bank: bank, result: r),
+                ),
+              ),
             ),
         ],
       ],

@@ -48,6 +48,19 @@ class AppStrings {
         'No wrong answers yet. Practice or take a mock exam first.',
       );
 
+  // ---- Xem lại chi tiết bài thi ----
+  String get examDetailTitle => _t('Chi tiết bài thi', 'Exam details');
+  String get filterAll => _t('Tất cả', 'All');
+  String get filterWrong => _t('Câu sai', 'Wrong only');
+  String get statusCorrect => _t('Đúng', 'Correct');
+  String get statusWrong => _t('Sai', 'Wrong');
+  String get statusUnanswered => _t('Bỏ trống', 'Unanswered');
+  String get examDetailUnavailable => _t(
+        'Không có chi tiết cho bài thi này (bài được lưu bởi phiên bản cũ của app).',
+        'No details are available for this exam (it was saved by an older version of the app).',
+      );
+  String get tapToReview => _t('Bấm để xem lại chi tiết', 'Tap to review details');
+
   // ---- Đánh dấu ----
   String get bookmarks => _t('Đánh dấu', 'Bookmarks');
   String get bookmarksSubtitle =>
