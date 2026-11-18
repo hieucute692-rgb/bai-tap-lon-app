@@ -37,15 +37,9 @@ class AppStrings {
         'Practice by block with instant feedback and explanations',
       );
   String get exam => _t('Thi thử', 'Mock exam');
-  String get examSubtitle => _t(
-        'Bốc ngẫu nhiên theo tỉ lệ các khối, chấm khi nộp bài',
-        'Random questions weighted by block, graded on submit',
-      );
+  String get examShort => _t('Chấm khi nộp bài', 'Graded on submit');
   String get stats => _t('Thống kê', 'Statistics');
-  String get statsSubtitle => _t(
-        'Tỉ lệ đúng theo từng khối và lịch sử thi thử',
-        'Accuracy by block and mock exam history',
-      );
+  String get statsShort => _t('Theo từng khối', 'By block');
   String get retryWrong => _t('Làm lại câu sai', 'Retry wrong answers');
   String get noWrongSubtitle => _t('Chưa có câu sai', 'No wrong answers');
   String wrongCount(int n) => _t('$n câu đang sai', '$n wrong');
