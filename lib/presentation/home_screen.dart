@@ -22,8 +22,28 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.watch<QuestionBankController>();
     final s = context.strings;
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
+      backgroundColor: scheme.surfaceContainerHighest,
       body: SafeArea(
+        child: switch (c.status) {
+          LoadStatus.loading => const Center(child: CircularProgressIndicator()),
+          LoadStatus.error => _Message(
+              icon: Icons.error_outline,
+              text: s.bankLoadError,
+              actionLabel: s.retry,
+              onAction: c.load,
+            ),
+          LoadStatus.ready => c.bank!.isEmpty
+              ? _Message(
+                  icon: Icons.inbox_outlined,
+                  text: s.noQuestions,
+                  actionLabel: s.reload,
+                  onAction: c.load,
+                )
+              : _Menu(bank: c.bank!),
+        },
+
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 820),
@@ -46,6 +66,7 @@ class HomeScreen extends StatelessWidget {
             },
           ),
         ),
+ main
       ),
     );
   }
