@@ -22,8 +22,11 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.watch<QuestionBankController>();
     final s = context.strings;
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
+      backgroundColor: scheme.surfaceContainerHighest,
       body: SafeArea(
+<<<<<<< Updated upstream
         child: switch (c.status) {
           LoadStatus.loading => const Center(child: CircularProgressIndicator()),
           LoadStatus.error => _Message(
@@ -41,6 +44,47 @@ class HomeScreen extends StatelessWidget {
                 )
               : _Menu(bank: c.bank!),
         },
+=======
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 960),
+            child: Container(
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                color: scheme.surface,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: scheme.outlineVariant),
+                boxShadow: [
+                  BoxShadow(
+                    color: scheme.shadow.withOpacity(
+                      Theme.of(context).brightness == Brightness.dark ? 0.3 : 0.12,
+                    ),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: switch (c.status) {
+                LoadStatus.loading => const Center(child: CircularProgressIndicator()),
+                LoadStatus.error => _Message(
+                    icon: Icons.error_outline,
+                    text: s.bankLoadError,
+                    actionLabel: s.retry,
+                    onAction: c.load,
+                  ),
+                LoadStatus.ready => c.bank!.isEmpty
+                    ? _Message(
+                        icon: Icons.inbox_outlined,
+                        text: s.noQuestions,
+                        actionLabel: s.reload,
+                        onAction: c.load,
+                      )
+                    : _Menu(bank: c.bank!),
+              },
+            ),
+          ),
+        ),
+>>>>>>> Stashed changes
       ),
     );
   }
