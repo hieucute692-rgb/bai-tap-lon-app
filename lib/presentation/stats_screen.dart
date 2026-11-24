@@ -43,8 +43,10 @@ class StatsScreen extends StatelessWidget {
     final answered = blocks.fold<int>(0, (sum, b) => sum + b.answered);
     final attempts = blocks.fold<int>(0, (sum, b) => sum + b.attempts);
     final correct = blocks.fold<int>(0, (sum, b) => sum + b.correct);
+    final examResults = c.examResults;
+    final hasPracticeStats = attempts > 0;
 
-    if (attempts == 0) {
+    if (!hasPracticeStats && examResults.isEmpty) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -82,52 +84,59 @@ class StatsScreen extends StatelessWidget {
               ],
             ),
           ),
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                s.statsAnswered(answered, bank.questions.length),
-                style: theme.textTheme.titleMedium,
-              ),
-              Text(s.statsAccuracy((100 * correct / attempts).round(), correct, attempts)),
-            ],
-          ),
-        ),
-        for (final b in blocks)
-          ListTile(
-            title: Text(s.blockTitle(b.block.id, b.block.nameFor(lang))),
-            subtitle: Column(
+        if (hasPracticeStats) ...[
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 4),
-                LinearProgressIndicator(
-                  value: b.accuracy ?? 0,
-                  semanticsLabel: s.accuracyForBlock(b.block.id),
-                ),
-                const SizedBox(height: 4),
                 Text(
-                  b.attempts == 0
-                      ? s.blockNotStarted(b.total)
-                      : s.blockStatsLine(
-                          percent: (b.accuracy! * 100).round(),
-                          correct: b.correct,
-                          attempts: b.attempts,
-                          answered: b.answered,
-                          total: b.total,
-                          wrong: b.wrong,
-                        ),
+                  s.statsAnswered(answered, bank.questions.length),
+                  style: theme.textTheme.titleMedium,
                 ),
+                Text(s.statsAccuracy((100 * correct / attempts).round(), correct, attempts)),
               ],
             ),
           ),
-        if (c.examResults.isNotEmpty) ...[
+          for (final b in blocks)
+            ListTile(
+              title: Text(s.blockTitle(b.block.id, b.block.nameFor(lang))),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 4),
+                  LinearProgressIndicator(
+                    value: b.accuracy ?? 0,
+                    semanticsLabel: s.accuracyForBlock(b.block.id),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    b.attempts == 0
+                        ? s.blockNotStarted(b.total)
+                        : s.blockStatsLine(
+                            percent: (b.accuracy! * 100).round(),
+                            correct: b.correct,
+                            attempts: b.attempts,
+                            answered: b.answered,
+                            total: b.total,
+                            wrong: b.wrong,
+                          ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+        if (examResults.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+            child: Text(s.examStats, style: theme.textTheme.titleMedium),
+          ),
+          _ExamSummary(results: examResults, strings: s),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
             child: Text(s.examHistory, style: theme.textTheme.titleMedium),
           ),
-          for (final ExamResult r in c.examResults)
+          for (final ExamResult r in examResults)
             ListTile(
               leading: const Icon(Icons.assignment_turned_in_outlined),
               title: Text(s.examHistoryEntry(r.correct, r.total, r.score10.toStringAsFixed(1))),
@@ -143,4 +152,78 @@ class StatsScreen extends StatelessWidget {
       ],
     );
   }
+}
+
+class _ExamSummary extends StatelessWidget {
+  const _ExamSummary({required this.results, required this.strings});
+
+  final List<ExamResult> results;
+  final AppStrings strings;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = strings;
+    final scheme = Theme.of(context).colorScheme;
+    final scores = results.map((result) => result.score10).toList();
+    final average = scores.reduce((a, b) => a + b) / scores.length;
+    final best = scores.reduce((a, b) => a > b ? a : b);
+    final latest = scores.first;
+    final metrics = [
+      (s.examCount, results.length.toString()),
+      (s.examAverageScore, average.toStringAsFixed(1)),
+      (s.examBestScore, best.toStringAsFixed(1)),
+      (s.examLatestScore, latest.toStringAsFixed(1)),
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = (constraints.maxWidth - 12) / 2;
+          return Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              for (final metric in metrics)
+                SizedBox(
+                  width: width,
+                  child: Card(
+                    margin: EdgeInsets.zero,
+                    color: scheme.surface,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: scheme.outlineVariant),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            metric.$1,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            metric.$2,
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                  color: scheme.primary,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
 }
