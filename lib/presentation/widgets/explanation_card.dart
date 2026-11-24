@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../app_theme.dart';
 import '../strings_context.dart';
 
 class ExplanationCard extends StatelessWidget {
@@ -10,13 +9,14 @@ class ExplanationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Card(
-      color: Colors.white,
+      color: scheme.surface,
       elevation: 0,
       margin: const EdgeInsets.symmetric(vertical: 8),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: AppColors.outline),
+        side: BorderSide(color: scheme.outline),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),

@@ -14,7 +14,7 @@ QuestionStat stat(int id, {required int attempts, required int correct, required
     );
 
 void main() {
-  final bank = sampleBank(); // câu 1,2 thuộc khối 1; câu 3 thuộc khối 2
+  final bank = sampleBank(); 
 
   test('thống kê theo khối', () {
     final stats = {

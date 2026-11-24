@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  // Số câu mỗi khối 1..20 theo tài liệu.
+  
   const expectedCounts = [20, 22, 25, 15, 18, 15, 18, 9, 20, 9, 9, 20, 23, 12, 9, 20, 8, 8, 12, 8];
 
   test('nạp đủ 300 câu hợp lệ từ assets', () async {

@@ -7,7 +7,6 @@ import '../domain/progress.dart';
 import '../domain/question.dart';
 import '../domain/question_bank.dart';
 import '../domain/question_text.dart';
-import 'app_theme.dart';
 import 'settings_controller.dart';
 import 'widgets/bookmark_button.dart';
 import 'widgets/explanation_card.dart';
@@ -72,7 +71,7 @@ class _ExamHistoryDetailScreenState extends State<ExamHistoryDetailScreen> {
                       Text(s.scoreOf(result.score10.toStringAsFixed(1))),
                       Text(
                         formatDayTime(result.takenAt),
-                        style: const TextStyle(color: AppColors.muted),
+                        style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                       ),
                       const SizedBox(height: 12),
                       SizedBox(
@@ -134,11 +133,12 @@ class _DetailTile extends StatelessWidget {
         : entry.correct
             ? Icons.check_circle
             : Icons.cancel;
+    final scheme = Theme.of(context).colorScheme;
     final color = !entry.answered
-        ? AppColors.muted
+        ? scheme.onSurfaceVariant
         : entry.correct
-            ? AppColors.stats.icon
-            : AppColors.retry.icon;
+            ? scheme.onSecondaryContainer
+            : scheme.onErrorContainer;
     final pick = entry.chosen;
 
     return ExpansionTile(
