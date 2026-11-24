@@ -178,6 +178,11 @@ class AppStrings {
         'Correct $percent% ($correct/$attempts attempts) · Done $answered/$total · Wrong $wrong',
       );
   String get examHistory => _t('Lịch sử thi thử', 'Mock exam history');
+  String get examStats => _t('Thống kê thi thử', 'Mock exam statistics');
+  String get examCount => _t('Số lần thi', 'Exams taken');
+  String get examAverageScore => _t('Điểm trung bình', 'Average score');
+  String get examBestScore => _t('Điểm cao nhất', 'Best score');
+  String get examLatestScore => _t('Lần gần nhất', 'Latest score');
   String examHistoryEntry(int correct, int total, String score) =>
       _t('$correct/$total câu · $score/10', '$correct/$total questions · $score/10');
   String get progressLoadProblem => _t(
