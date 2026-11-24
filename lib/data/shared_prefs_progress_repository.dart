@@ -6,8 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../domain/progress.dart';
 import '../domain/progress_repository.dart';
 
-/// Lưu tiến độ trên máy bằng shared_preferences (chạy được cả Android và web).
-/// Dữ liệu hỏng sẽ bị bỏ qua thay vì làm app dừng.
+
+
 class SharedPrefsProgressRepository implements ProgressRepository {
   static const statsKey = 'progress_stats_v1';
   static const examsKey = 'progress_exams_v1';

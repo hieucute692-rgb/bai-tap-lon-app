@@ -7,6 +7,11 @@ class AppStrings {
 
   final ContentLanguage language;
 
+  String get appearance => _t('Giao diện', 'Appearance');
+  String get themeLight => _t('Sáng', 'Light');
+  String get themeSystem => _t('Tự động', 'System');
+  String get themeDark => _t('Tối', 'Dark');
+
   String _t(String vi, String en) => language == ContentLanguage.vi ? vi : en;
 
   // ---- Chung ----

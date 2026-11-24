@@ -1,6 +1,6 @@
 import 'question.dart';
 
-/// Diễn biến một lượt luyện tập: trả lời xong mới được sang câu tiếp, mỗi câu chọn một lần.
+
 class PracticeSession {
   PracticeSession(List<Question> questions)
       : questions = List<Question>.unmodifiable(questions),

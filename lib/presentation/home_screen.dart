@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../domain/progress_stats.dart';
 import '../domain/question.dart';
 import '../domain/question_bank.dart';
-import 'app_theme.dart';
 import 'bookmark_controller.dart';
 import 'bookmarks_screen.dart';
 import 'exam_setup_screen.dart';
@@ -62,6 +61,7 @@ class _Menu extends StatelessWidget {
     final settings = context.watch<SettingsController>();
     final bookmarks = context.watch<BookmarkController>();
     final s = settings.strings;
+    final scheme = Theme.of(context).colorScheme;
     final wrong = wrongQuestions(bank, progress.stats);
 
     return SingleChildScrollView(
@@ -73,24 +73,33 @@ class _Menu extends StatelessWidget {
             header: true,
             child: Text(
               s.appTitle,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.w700,
                 letterSpacing: -0.5,
-                color: AppColors.ink,
+                color: scheme.onSurface,
               ),
             ),
           ),
           const SizedBox(height: 4),
           Text(
             s.questionsAndBlocks(bank.questions.length, bank.blocks.length),
-            style: const TextStyle(fontSize: 15, color: AppColors.muted),
+            style: TextStyle(fontSize: 15, color: scheme.onSurfaceVariant),
           ),
           const SizedBox(height: 16),
           _LanguageBlock(
             label: s.displayLanguage,
             language: settings.language,
             onChanged: settings.setLanguage,
+          ),
+          const SizedBox(height: 12),
+          _ThemeModeBlock(
+            mode: settings.themeMode,
+            onChanged: settings.setThemeMode,
+            appearanceLabel: s.appearance,
+            lightLabel: s.themeLight,
+            systemLabel: s.themeSystem,
+            darkLabel: s.themeDark,
           ),
           const SizedBox(height: 16),
           _HeroCard(
@@ -103,14 +112,16 @@ class _Menu extends StatelessWidget {
           _TileRow(
             left: _Tile(
               icon: Icons.timer_outlined,
-              colors: AppColors.exam,
+              background: scheme.tertiaryContainer,
+              foreground: scheme.onTertiaryContainer,
               title: s.exam,
               subtitle: s.examShort,
               onTap: () => _push(context, ExamSetupScreen(bank: bank)),
             ),
             right: _Tile(
               icon: Icons.bar_chart,
-              colors: AppColors.stats,
+              background: scheme.secondaryContainer,
+              foreground: scheme.onSecondaryContainer,
               title: s.stats,
               subtitle: s.statsShort,
               onTap: () => _push(context, StatsScreen(bank: bank)),
@@ -120,7 +131,8 @@ class _Menu extends StatelessWidget {
           _TileRow(
             left: _Tile(
               icon: Icons.replay,
-              colors: AppColors.retry,
+              background: scheme.errorContainer,
+              foreground: scheme.onErrorContainer,
               title: s.retryWrong,
               subtitle: wrong.isEmpty ? s.noWrongSubtitle : s.wrongCount(wrong.length),
               badge: wrong.isEmpty ? null : wrong.length,
@@ -139,7 +151,8 @@ class _Menu extends StatelessWidget {
             ),
             right: _Tile(
               icon: Icons.bookmark_outline,
-              colors: AppColors.bookmark,
+              background: scheme.primaryContainer,
+              foreground: scheme.onPrimaryContainer,
               title: s.bookmarks,
               subtitle: bookmarks.count == 0
                   ? s.noBookmarksSubtitle
@@ -175,10 +188,10 @@ class _LanguageBlock extends StatelessWidget {
           padding: const EdgeInsets.only(left: 4, bottom: 6),
           child: Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: AppColors.muted,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ),
@@ -193,11 +206,73 @@ class _LanguageBlock extends StatelessWidget {
             showSelectedIcon: false,
             onSelectionChanged: (sel) => onChanged(sel.first),
             style: SegmentedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: AppColors.muted,
-              selectedBackgroundColor: AppColors.primary,
-              selectedForegroundColor: Colors.white,
-              side: const BorderSide(color: AppColors.outline),
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
+              selectedBackgroundColor: Theme.of(context).colorScheme.primary,
+              selectedForegroundColor: Theme.of(context).colorScheme.onPrimary,
+              side: BorderSide(color: Theme.of(context).colorScheme.outline),
+              shape: const StadiumBorder(),
+              textStyle: const TextStyle(fontWeight: FontWeight.w600),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ThemeModeBlock extends StatelessWidget {
+  const _ThemeModeBlock({
+    required this.mode,
+    required this.onChanged,
+    required this.appearanceLabel,
+    required this.lightLabel,
+    required this.systemLabel,
+    required this.darkLabel,
+  });
+
+  final ThemeMode mode;
+  final ValueChanged<ThemeMode> onChanged;
+  final String appearanceLabel;
+  final String lightLabel;
+  final String systemLabel;
+  final String darkLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 6),
+          child: Text(
+            appearanceLabel,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+        SizedBox(
+          width: double.infinity,
+          child: SegmentedButton<ThemeMode>(
+            segments: [
+              ButtonSegment(value: ThemeMode.light, label: Text(lightLabel)),
+              ButtonSegment(value: ThemeMode.system, label: Text(systemLabel)),
+              ButtonSegment(value: ThemeMode.dark, label: Text(darkLabel)),
+            ],
+            selected: {mode},
+            showSelectedIcon: false,
+            onSelectionChanged: (selection) => onChanged(selection.first),
+            style: SegmentedButton.styleFrom(
+              backgroundColor: scheme.surface,
+              foregroundColor: scheme.onSurfaceVariant,
+              selectedBackgroundColor: scheme.primary,
+              selectedForegroundColor: scheme.onPrimary,
+              side: BorderSide(color: scheme.outline),
               shape: const StadiumBorder(),
               textStyle: const TextStyle(fontWeight: FontWeight.w600),
               padding: const EdgeInsets.symmetric(vertical: 12),
@@ -226,6 +301,7 @@ class _HeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(24);
+    final scheme = Theme.of(context).colorScheme;
     return SizedBox(
       width: double.infinity,
       child: Semantics(
@@ -233,7 +309,7 @@ class _HeroCard extends StatelessWidget {
         label: '$title. $subtitle',
         excludeSemantics: true,
         child: Material(
-          color: AppColors.primary,
+          color: scheme.primary,
           borderRadius: radius,
           child: InkWell(
             borderRadius: radius,
@@ -247,24 +323,24 @@ class _HeroCard extends StatelessWidget {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: AppColors.translucentWhite,
+                      color: scheme.onPrimary.withOpacity(0.18),
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Icon(icon, color: Colors.white),
+                    child: Icon(icon, color: scheme.onPrimary),
                   ),
                   const SizedBox(height: 14),
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                      color: scheme.onPrimary,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: const TextStyle(fontSize: 14, color: AppColors.onPrimarySoft),
+                    style: TextStyle(fontSize: 14, color: scheme.onPrimary),
                   ),
                 ],
               ),
@@ -301,7 +377,8 @@ class _TileRow extends StatelessWidget {
 class _Tile extends StatelessWidget {
   const _Tile({
     required this.icon,
-    required this.colors,
+    required this.background,
+    required this.foreground,
     required this.title,
     required this.subtitle,
     required this.onTap,
@@ -309,7 +386,8 @@ class _Tile extends StatelessWidget {
   });
 
   final IconData icon;
-  final TileColors colors;
+  final Color background;
+  final Color foreground;
   final String title;
   final String subtitle;
   final VoidCallback onTap;
@@ -323,7 +401,7 @@ class _Tile extends StatelessWidget {
       label: '$title. $subtitle',
       excludeSemantics: true,
       child: Material(
-        color: colors.background,
+        color: background,
         borderRadius: radius,
         child: InkWell(
           borderRadius: radius,
@@ -339,7 +417,7 @@ class _Tile extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(icon, size: 28, color: colors.icon),
+                      Icon(icon, size: 28, color: foreground),
                       if (badge != null) _Badge(count: badge!),
                     ],
                   ),
@@ -349,16 +427,16 @@ class _Tile extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.ink,
+                          color: foreground,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         subtitle,
-                        style: TextStyle(fontSize: 12.5, color: colors.subtitle),
+                        style: TextStyle(fontSize: 12.5, color: foreground),
                       ),
                     ],
                   ),
@@ -382,15 +460,15 @@ class _Badge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 2),
       decoration: BoxDecoration(
-        color: AppColors.ink,
+        color: Theme.of(context).colorScheme.inverseSurface,
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
         '$count',
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.onInverseSurface,
         ),
       ),
     );

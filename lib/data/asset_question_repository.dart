@@ -6,7 +6,7 @@ import '../domain/question.dart';
 import '../domain/question_bank.dart';
 import '../domain/question_repository.dart';
 
-/// Đọc ngân hàng câu hỏi từ tệp JSON đóng gói trong assets.
+
 class AssetQuestionRepository implements QuestionRepository {
   AssetQuestionRepository({AssetBundle? bundle, this.assetPath = defaultAssetPath})
       : _bundle = bundle ?? rootBundle;

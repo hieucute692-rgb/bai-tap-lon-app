@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../domain/question.dart';
@@ -5,6 +6,7 @@ import '../domain/settings_repository.dart';
 
 class SharedPrefsSettingsRepository implements SettingsRepository {
   static const languageKey = 'language_v1';
+  static const themeModeKey = 'theme_mode_v1';
 
   @override
   Future<ContentLanguage?> loadLanguage() async {
@@ -20,5 +22,22 @@ class SharedPrefsSettingsRepository implements SettingsRepository {
   Future<void> saveLanguage(ContentLanguage language) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(languageKey, language.name);
+  }
+
+  @override
+  Future<ThemeMode?> loadThemeMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    return switch (prefs.getString(themeModeKey)) {
+      'light' => ThemeMode.light,
+      'system' => ThemeMode.system,
+      'dark' => ThemeMode.dark,
+      _ => null,
+    };
+  }
+
+  @override
+  Future<void> saveThemeMode(ThemeMode mode) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(themeModeKey, mode.name);
   }
 }

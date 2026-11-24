@@ -48,10 +48,14 @@ class QuizApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => SettingsController(settingsRepository)..load()),
         ChangeNotifierProvider(create: (_) => BookmarkController(bookmarkRepository)..load()),
       ],
-      child: MaterialApp(
-        title: 'Ôn tập Flutter',
-        theme: buildAppTheme(),
-        home: const HomeScreen(),
+      child: Consumer<SettingsController>(
+        builder: (context, settings, _) => MaterialApp(
+          title: 'Ôn tập Flutter',
+          theme: buildAppTheme(Brightness.light),
+          darkTheme: buildAppTheme(Brightness.dark),
+          themeMode: settings.themeMode,
+          home: const HomeScreen(),
+        ),
       ),
     );
   }

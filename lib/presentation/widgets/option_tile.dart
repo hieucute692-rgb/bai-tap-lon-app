@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../app_theme.dart';
 
 enum OptionState { idle, selected, correct, wrong }
 
@@ -21,26 +20,27 @@ class OptionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     final Color background;
     final IconData? icon;
     final Color? iconColor;
     switch (state) {
       case OptionState.idle:
-        background = Colors.white;
+        background = scheme.surface;
         icon = null;
         iconColor = null;
       case OptionState.selected:
-        background = AppColors.selectedTint;
+        background = scheme.primaryContainer;
         icon = Icons.radio_button_checked;
-        iconColor = AppColors.primary;
+        iconColor = scheme.onPrimaryContainer;
       case OptionState.correct:
-        background = AppColors.stats.background;
+        background = scheme.secondaryContainer;
         icon = Icons.check_circle;
-        iconColor = AppColors.stats.icon;
+        iconColor = scheme.onSecondaryContainer;
       case OptionState.wrong:
-        background = AppColors.retry.background;
+        background = scheme.errorContainer;
         icon = Icons.cancel;
-        iconColor = AppColors.retry.icon;
+        iconColor = scheme.onErrorContainer;
     }
     final radius = BorderRadius.circular(16);
     return Card(
@@ -49,7 +49,7 @@ class OptionTile extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 4),
       shape: RoundedRectangleBorder(
         borderRadius: radius,
-        side: const BorderSide(color: AppColors.outline),
+        side: BorderSide(color: scheme.outline),
       ),
       child: InkWell(
         borderRadius: radius,
