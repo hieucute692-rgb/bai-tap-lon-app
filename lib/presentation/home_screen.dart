@@ -26,7 +26,6 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: scheme.surfaceContainerHighest,
       body: SafeArea(
-<<<<<<< Updated upstream
         child: switch (c.status) {
           LoadStatus.loading => const Center(child: CircularProgressIndicator()),
           LoadStatus.error => _Message(
@@ -44,47 +43,30 @@ class HomeScreen extends StatelessWidget {
                 )
               : _Menu(bank: c.bank!),
         },
-=======
+
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 960),
-            child: Container(
-              clipBehavior: Clip.antiAlias,
-              decoration: BoxDecoration(
-                color: scheme.surface,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: scheme.outlineVariant),
-                boxShadow: [
-                  BoxShadow(
-                    color: scheme.shadow.withOpacity(
-                      Theme.of(context).brightness == Brightness.dark ? 0.3 : 0.12,
-                    ),
-                    blurRadius: 24,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: switch (c.status) {
-                LoadStatus.loading => const Center(child: CircularProgressIndicator()),
-                LoadStatus.error => _Message(
-                    icon: Icons.error_outline,
-                    text: s.bankLoadError,
-                    actionLabel: s.retry,
-                    onAction: c.load,
-                  ),
-                LoadStatus.ready => c.bank!.isEmpty
-                    ? _Message(
-                        icon: Icons.inbox_outlined,
-                        text: s.noQuestions,
-                        actionLabel: s.reload,
-                        onAction: c.load,
-                      )
-                    : _Menu(bank: c.bank!),
-              },
-            ),
+            constraints: const BoxConstraints(maxWidth: 820),
+            child: switch (c.status) {
+              LoadStatus.loading => const Center(child: CircularProgressIndicator()),
+              LoadStatus.error => _Message(
+                  icon: Icons.error_outline,
+                  text: s.bankLoadError,
+                  actionLabel: s.retry,
+                  onAction: c.load,
+                ),
+              LoadStatus.ready => c.bank!.isEmpty
+                  ? _Message(
+                      icon: Icons.inbox_outlined,
+                      text: s.noQuestions,
+                      actionLabel: s.reload,
+                      onAction: c.load,
+                    )
+                  : _Menu(bank: c.bank!),
+            },
           ),
         ),
->>>>>>> Stashed changes
+ main
       ),
     );
   }
@@ -106,44 +88,73 @@ class _Menu extends StatelessWidget {
     final bookmarks = context.watch<BookmarkController>();
     final s = settings.strings;
     final scheme = Theme.of(context).colorScheme;
-    final wrong = wrongQuestions(bank, progress.stats);
+    final stats = progress.stats;
+    final completed = bank.questions.where((question) {
+      final stat = stats[question.id];
+      return stat != null && stat.attempts > 0;
+    }).length;
+    final wrong = wrongQuestions(bank, stats);
+    final columns = MediaQuery.sizeOf(context).width >= 500 ? 2 : 1;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Semantics(
-            header: true,
-            child: Text(
-              s.appTitle,
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.5,
-                color: scheme.onSurface,
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 16,
+            runSpacing: 16,
+            children: [
+              Semantics(
+                header: true,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      s.appTitle,
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.5,
+                        color: scheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      s.questionsAndBlocks(bank.questions.length, bank.blocks.length),
+                      style: TextStyle(fontSize: 15, color: scheme.onSurfaceVariant),
+                    ),
+                  ],
+                ),
               ),
-            ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  _LanguageBlock(
+                    language: settings.language,
+                    onChanged: settings.setLanguage,
+                  ),
+                  const SizedBox(height: 8),
+                  _ThemeModeBlock(
+                    mode: settings.themeMode,
+                    onChanged: settings.setThemeMode,
+                    appearanceLabel: s.appearance,
+                    lightLabel: s.themeLight,
+                    systemLabel: s.themeSystem,
+                    darkLabel: s.themeDark,
+                  ),
+                ],
+              ),
+            ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            s.questionsAndBlocks(bank.questions.length, bank.blocks.length),
-            style: TextStyle(fontSize: 15, color: scheme.onSurfaceVariant),
-          ),
-          const SizedBox(height: 16),
-          _LanguageBlock(
-            label: s.displayLanguage,
-            language: settings.language,
-            onChanged: settings.setLanguage,
-          ),
-          const SizedBox(height: 12),
-          _ThemeModeBlock(
-            mode: settings.themeMode,
-            onChanged: settings.setThemeMode,
-            appearanceLabel: s.appearance,
-            lightLabel: s.themeLight,
-            systemLabel: s.themeSystem,
-            darkLabel: s.themeDark,
+          const SizedBox(height: 20),
+          _ProgressCard(
+            completed: completed,
+            total: bank.questions.length,
+            label: s.practiceProgress,
+            countLabel: s.statsAnswered(completed, bank.questions.length),
           ),
           const SizedBox(height: 16),
           _HeroCard(
@@ -153,57 +164,59 @@ class _Menu extends StatelessWidget {
             onTap: () => _push(context, PracticeSetupScreen(bank: bank)),
           ),
           const SizedBox(height: 12),
-          _TileRow(
-            left: _Tile(
-              icon: Icons.timer_outlined,
-              background: scheme.tertiaryContainer,
-              foreground: scheme.onTertiaryContainer,
-              title: s.exam,
-              subtitle: s.examShort,
-              onTap: () => _push(context, ExamSetupScreen(bank: bank)),
-            ),
-            right: _Tile(
-              icon: Icons.bar_chart,
-              background: scheme.secondaryContainer,
-              foreground: scheme.onSecondaryContainer,
-              title: s.stats,
-              subtitle: s.statsShort,
-              onTap: () => _push(context, StatsScreen(bank: bank)),
-            ),
-          ),
-          const SizedBox(height: 12),
-          _TileRow(
-            left: _Tile(
-              icon: Icons.replay,
-              background: scheme.errorContainer,
-              foreground: scheme.onErrorContainer,
-              title: s.retryWrong,
-              subtitle: wrong.isEmpty ? s.noWrongSubtitle : s.wrongCount(wrong.length),
-              badge: wrong.isEmpty ? null : wrong.length,
-              onTap: () {
-                if (wrong.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(s.noWrongYet)),
-                  );
-                  return;
-                }
-                _push(
-                  context,
-                  PracticeScreen(titleOf: (s) => s.retryWrong, questions: wrong),
-                );
-              },
-            ),
-            right: _Tile(
-              icon: Icons.bookmark_outline,
-              background: scheme.primaryContainer,
-              foreground: scheme.onPrimaryContainer,
-              title: s.bookmarks,
-              subtitle: bookmarks.count == 0
-                  ? s.noBookmarksSubtitle
-                  : s.bookmarkedCount(bookmarks.count),
-              badge: bookmarks.count == 0 ? null : bookmarks.count,
-              onTap: () => _push(context, BookmarksScreen(bank: bank)),
-            ),
+          GridView.count(
+            crossAxisCount: columns,
+            mainAxisExtent: columns == 2 ? 124 : 96,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            children: [
+              _Tile(
+                icon: Icons.timer_outlined,
+                background: scheme.tertiaryContainer,
+                foreground: scheme.onTertiaryContainer,
+                title: s.exam,
+                subtitle: s.examShort,
+                onTap: () => _push(context, ExamSetupScreen(bank: bank)),
+              ),
+              _Tile(
+                icon: Icons.bar_chart,
+                background: scheme.secondaryContainer,
+                foreground: scheme.onSecondaryContainer,
+                title: s.stats,
+                subtitle: s.statsShort,
+                onTap: () => _push(context, StatsScreen(bank: bank)),
+              ),
+              _Tile(
+                icon: Icons.replay,
+                background: scheme.errorContainer,
+                foreground: scheme.onErrorContainer,
+                title: s.retryWrong,
+                subtitle: wrong.isEmpty ? s.noWrongSubtitle : s.wrongCount(wrong.length),
+                badge: wrong.isEmpty ? null : wrong.length,
+                onTap: () {
+                  if (wrong.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(s.noWrongYet)),
+                    );
+                    return;
+                  }
+                  _push(context, PracticeScreen(titleOf: (s) => s.retryWrong, questions: wrong));
+                },
+              ),
+              _Tile(
+                icon: Icons.bookmark_outline,
+                background: scheme.primaryContainer,
+                foreground: scheme.onPrimaryContainer,
+                title: s.bookmarks,
+                subtitle: bookmarks.count == 0
+                    ? s.noBookmarksSubtitle
+                    : s.bookmarkedCount(bookmarks.count),
+                badge: bookmarks.count == 0 ? null : bookmarks.count,
+                onTap: () => _push(context, BookmarksScreen(bank: bank)),
+              ),
+            ],
           ),
         ],
       ),
@@ -214,54 +227,81 @@ class _Menu extends StatelessWidget {
 /// Chọn ngôn ngữ hiển thị cho cả app (chữ giao diện và nội dung câu hỏi).
 class _LanguageBlock extends StatelessWidget {
   const _LanguageBlock({
-    required this.label,
     required this.language,
     required this.onChanged,
   });
 
-  final String label;
   final ContentLanguage language;
   final ValueChanged<ContentLanguage> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 6),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-        SizedBox(
-          width: double.infinity,
-          child: SegmentedButton<ContentLanguage>(
-            segments: const <ButtonSegment<ContentLanguage>>[
-              ButtonSegment(value: ContentLanguage.vi, label: Text('Tiếng Việt')),
-              ButtonSegment(value: ContentLanguage.en, label: Text('English')),
-            ],
-            selected: {language},
-            showSelectedIcon: false,
-            onSelectionChanged: (sel) => onChanged(sel.first),
-            style: SegmentedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.surface,
-              foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
-              selectedBackgroundColor: Theme.of(context).colorScheme.primary,
-              selectedForegroundColor: Theme.of(context).colorScheme.onPrimary,
-              side: BorderSide(color: Theme.of(context).colorScheme.outline),
-              shape: const StadiumBorder(),
-              textStyle: const TextStyle(fontWeight: FontWeight.w600),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-        ),
+    final scheme = Theme.of(context).colorScheme;
+    return SegmentedButton<ContentLanguage>(
+      segments: const <ButtonSegment<ContentLanguage>>[
+        ButtonSegment(value: ContentLanguage.vi, label: Text('Tiếng Việt')),
+        ButtonSegment(value: ContentLanguage.en, label: Text('English')),
       ],
+      selected: {language},
+      showSelectedIcon: false,
+      onSelectionChanged: (selection) => onChanged(selection.first),
+      style: SegmentedButton.styleFrom(
+        backgroundColor: scheme.surface,
+        foregroundColor: scheme.onSurfaceVariant,
+        selectedBackgroundColor: scheme.primary,
+        selectedForegroundColor: scheme.onPrimary,
+        side: BorderSide(color: scheme.outline),
+        shape: const StadiumBorder(),
+        textStyle: const TextStyle(fontWeight: FontWeight.w600),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      ),
+    );
+  }
+}
+
+class _ProgressCard extends StatelessWidget {
+  const _ProgressCard({
+    required this.completed,
+    required this.total,
+    required this.label,
+    required this.countLabel,
+  });
+
+  final int completed;
+  final int total;
+  final String label;
+  final String countLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Card(
+      margin: EdgeInsets.zero,
+      elevation: 0,
+      color: scheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(color: scheme.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: Theme.of(context).textTheme.titleSmall),
+            const SizedBox(height: 4),
+            Text(
+              countLabel,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            const SizedBox(height: 12),
+            LinearProgressIndicator(value: total == 0 ? 0 : completed / total),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -300,27 +340,24 @@ class _ThemeModeBlock extends StatelessWidget {
             ),
           ),
         ),
-        SizedBox(
-          width: double.infinity,
-          child: SegmentedButton<ThemeMode>(
-            segments: [
-              ButtonSegment(value: ThemeMode.light, label: Text(lightLabel)),
-              ButtonSegment(value: ThemeMode.system, label: Text(systemLabel)),
-              ButtonSegment(value: ThemeMode.dark, label: Text(darkLabel)),
-            ],
-            selected: {mode},
-            showSelectedIcon: false,
-            onSelectionChanged: (selection) => onChanged(selection.first),
-            style: SegmentedButton.styleFrom(
-              backgroundColor: scheme.surface,
-              foregroundColor: scheme.onSurfaceVariant,
-              selectedBackgroundColor: scheme.primary,
-              selectedForegroundColor: scheme.onPrimary,
-              side: BorderSide(color: scheme.outline),
-              shape: const StadiumBorder(),
-              textStyle: const TextStyle(fontWeight: FontWeight.w600),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
+        SegmentedButton<ThemeMode>(
+          segments: [
+            ButtonSegment(value: ThemeMode.light, label: Text(lightLabel)),
+            ButtonSegment(value: ThemeMode.system, label: Text(systemLabel)),
+            ButtonSegment(value: ThemeMode.dark, label: Text(darkLabel)),
+          ],
+          selected: {mode},
+          showSelectedIcon: false,
+          onSelectionChanged: (selection) => onChanged(selection.first),
+          style: SegmentedButton.styleFrom(
+            backgroundColor: scheme.surface,
+            foregroundColor: scheme.onSurfaceVariant,
+            selectedBackgroundColor: scheme.primary,
+            selectedForegroundColor: scheme.onPrimary,
+            side: BorderSide(color: scheme.outline),
+            shape: const StadiumBorder(),
+            textStyle: const TextStyle(fontWeight: FontWeight.w600),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           ),
         ),
       ],
@@ -360,59 +397,45 @@ class _HeroCard extends StatelessWidget {
             onTap: onTap,
             child: Padding(
               padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
                   Container(
-                    width: 48,
-                    height: 48,
+                    width: 52,
+                    height: 52,
                     decoration: BoxDecoration(
                       color: scheme.onPrimary.withOpacity(0.18),
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Icon(icon, color: scheme.onPrimary),
+                    child: Icon(icon, color: scheme.onPrimary, size: 28),
                   ),
-                  const SizedBox(height: 14),
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      color: scheme.onPrimary,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: scheme.onPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          subtitle,
+                          style: TextStyle(fontSize: 14, color: scheme.onPrimary),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: TextStyle(fontSize: 14, color: scheme.onPrimary),
-                  ),
+                  const SizedBox(width: 12),
+                  Icon(Icons.arrow_forward_rounded, color: scheme.onPrimary),
                 ],
               ),
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// Hai thẻ nhỏ cạnh nhau, luôn cao bằng nhau kể cả khi người dùng tăng cỡ chữ.
-class _TileRow extends StatelessWidget {
-  const _TileRow({required this.left, required this.right});
-
-  final Widget left;
-  final Widget right;
-
-  @override
-  Widget build(BuildContext context) {
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(child: left),
-          const SizedBox(width: 12),
-          Expanded(child: right),
-        ],
       ),
     );
   }
@@ -450,23 +473,15 @@ class _Tile extends StatelessWidget {
         child: InkWell(
           borderRadius: radius,
           onTap: onTap,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 132),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Icon(icon, size: 28, color: foreground),
-                      if (badge != null) _Badge(count: badge!),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Column(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Icon(icon, size: 28, color: foreground),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
@@ -477,15 +492,23 @@ class _Tile extends StatelessWidget {
                           color: foreground,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 3),
                       Text(
                         subtitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(fontSize: 12.5, color: foreground),
                       ),
                     ],
                   ),
+                ),
+                if (badge != null) ...[
+                  const SizedBox(width: 8),
+                  _Badge(count: badge!),
                 ],
-              ),
+                const SizedBox(width: 4),
+                Icon(Icons.chevron_right, color: foreground),
+              ],
             ),
           ),
         ),

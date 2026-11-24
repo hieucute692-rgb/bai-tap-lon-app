@@ -51,6 +51,7 @@ class QuizApp extends StatelessWidget {
       child: Consumer<SettingsController>(
         builder: (context, settings, _) => MaterialApp(
           title: 'Ôn tập Flutter',
+          debugShowCheckedModeBanner: false,
           theme: buildAppTheme(Brightness.light),
           darkTheme: buildAppTheme(Brightness.dark),
           themeMode: settings.themeMode,
