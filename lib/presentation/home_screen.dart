@@ -10,6 +10,7 @@ import 'exam_setup_screen.dart';
 import 'practice_screen.dart';
 import 'practice_setup_screen.dart';
 import 'quick_study_blocks_screen.dart';
+import 'search_questions_screen.dart';
 import 'progress_controller.dart';
 import 'question_bank_controller.dart';
 import 'settings_controller.dart';
@@ -135,6 +136,25 @@ class _Menu extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 18),
+          Card(
+            margin: EdgeInsets.zero,
+            color: scheme.surfaceContainerHigh,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () => _push(context, SearchQuestionsScreen(bank: bank)),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                child: Row(children: [
+                  Icon(Icons.search_rounded, color: scheme.primary),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text(s.searchHomePrompt, style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: scheme.onSurfaceVariant))),
+                  Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
+                ]),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
           _ProgressCard(
             completed: completed,
             total: bank.questions.length,

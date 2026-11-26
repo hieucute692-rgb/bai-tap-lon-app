@@ -43,6 +43,15 @@ class AppStrings {
   String get quickStudyBookmarked => _t('Chỉ câu đã đánh dấu', 'Bookmarked only');
   String get quickStudyEmpty => _t('Chưa có câu nào được đánh dấu trong khối này.', 'No bookmarked questions in this block yet.');
   String get quickStudyAnswer => _t('Đáp án đúng', 'Correct answer');
+  String get searchQuestions => _t('Tra cứu nhanh', 'Quick search');
+  String get searchPrompt => _t('Tìm từ khóa, khái niệm Flutter...', 'Search keywords, Flutter concepts...');
+  String get searchHomePrompt => _t('Tra cứu nhanh 300 câu hỏi...', 'Search 300 questions...');
+  String get searchAllBlocks => _t('Tất cả', 'All');
+  String get searchShowAnswers => _t('Hiện đáp án', 'Show answers');
+  String get searchFound => _t('Tìm thấy', 'Found');
+  String get searchResults => _t('câu hỏi', 'questions');
+  String get searchEmpty => _t('Không tìm thấy câu hỏi phù hợp.', 'No matching questions found.');
+  String get searchHint => _t('Nhập từ khóa hoặc thử một gợi ý bên dưới.', 'Enter a keyword or try a suggestion below.');
   String get practiceSubtitle => _t(
         'Làm theo khối, biết đúng sai và xem giải thích ngay',
         'Practice by block with instant feedback and explanations',
