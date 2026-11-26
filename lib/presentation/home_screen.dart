@@ -164,6 +164,11 @@ class _Menu extends StatelessWidget {
             label: s.language == ContentLanguage.vi
                 ? 'Tiến độ học'
                 : 'Learning progress',
+            dailyGoal: progress.dailyGoal,
+            todayAnsweredCount: progress.todayAnsweredCount,
+            currentStreak: progress.currentStreak,
+            goalComplete: progress.dailyGoalComplete,
+            onChooseGoal: () => _chooseDailyGoal(context, progress),
           ),
           const SizedBox(height: 20),
           Text(
@@ -260,6 +265,42 @@ class _Menu extends StatelessWidget {
       ),
     );
   }
+
+  Future<void> _chooseDailyGoal(
+    BuildContext context,
+    ProgressController progress,
+  ) async {
+    final s = context.stringsNow;
+    final selected = await showModalBottomSheet<int>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+                child: Text(s.chooseDailyGoal,
+                    style: Theme.of(context).textTheme.titleMedium),
+              ),
+              for (final goal in [10, 15, 30, 45])
+                ListTile(
+                  title: Text(s.dailyGoalOption(goal)),
+                  trailing: progress.dailyGoal == goal
+                      ? Icon(Icons.check_rounded,
+                          color: Theme.of(context).colorScheme.primary)
+                      : null,
+                  onTap: () => Navigator.of(context).pop(goal),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (selected != null) await progress.setDailyGoal(selected);
+  }
 }
 
 class _LanguageBlock extends StatelessWidget {
@@ -344,6 +385,11 @@ class _ProgressCard extends StatelessWidget {
     required this.wrong,
     required this.remaining,
     required this.label,
+    required this.dailyGoal,
+    required this.todayAnsweredCount,
+    required this.currentStreak,
+    required this.goalComplete,
+    required this.onChooseGoal,
   });
 
   final int completed;
@@ -352,6 +398,11 @@ class _ProgressCard extends StatelessWidget {
   final int wrong;
   final int remaining;
   final String label;
+  final int dailyGoal;
+  final int todayAnsweredCount;
+  final int currentStreak;
+  final bool goalComplete;
+  final VoidCallback onChooseGoal;
 
   @override
   Widget build(BuildContext context) {
@@ -429,6 +480,77 @@ class _ProgressCard extends StatelessWidget {
                   count: remaining,
                   label: isVietnamese ? 'còn lại' : 'remaining',
                   color: Colors.orange,
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(children: [
+                        Expanded(
+                          child: Text(
+                            context.strings.dailyGoal,
+                            style: Theme.of(context).textTheme.labelLarge
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                        if (goalComplete)
+                          const Icon(Icons.check_circle_rounded,
+                              color: Colors.green, size: 19),
+                        IconButton(
+                          tooltip: context.strings.chooseDailyGoal,
+                          visualDensity: VisualDensity.compact,
+                          constraints:
+                              const BoxConstraints.tightFor(width: 34, height: 34),
+                          padding: EdgeInsets.zero,
+                          icon: const Icon(Icons.tune_rounded, size: 19),
+                          onPressed: onChooseGoal,
+                        ),
+                      ]),
+                      Text(
+                        context.strings.dailyGoalProgress(
+                            todayAnsweredCount, dailyGoal),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: scheme.onSurfaceVariant,
+                            ),
+                      ),
+                      const SizedBox(height: 7),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(99),
+                        child: LinearProgressIndicator(
+                          minHeight: 5,
+                          value: (todayAnsweredCount / dailyGoal)
+                              .clamp(0.0, 1.0)
+                              .toDouble(),
+                          color: goalComplete ? Colors.green : scheme.tertiary,
+                          backgroundColor: scheme.surfaceContainerHighest,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+                  decoration: BoxDecoration(
+                    color: scheme.tertiaryContainer,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Column(
+                    children: [
+                      const Icon(Icons.local_fire_department_rounded,
+                          color: Colors.deepOrange, size: 23),
+                      const SizedBox(height: 2),
+                      Text(context.strings.studyStreak(currentStreak),
+                          style: Theme.of(context).textTheme.labelMedium
+                              ?.copyWith(fontWeight: FontWeight.w800)),
+                    ],
+                  ),
                 ),
               ],
             ),

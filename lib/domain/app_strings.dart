@@ -43,6 +43,16 @@ class AppStrings {
   String get quickStudyBookmarked => _t('Chỉ câu đã đánh dấu', 'Bookmarked only');
   String get quickStudyEmpty => _t('Chưa có câu nào được đánh dấu trong khối này.', 'No bookmarked questions in this block yet.');
   String get quickStudyAnswer => _t('Đáp án đúng', 'Correct answer');
+  String get dailyGoal => _t('Mục tiêu hôm nay', 'Today\'s goal');
+  String dailyGoalProgress(int count, int goal) =>
+      _t('Hôm nay: $count / $goal câu', 'Today: $count / $goal questions');
+  String studyStreak(int days) => _t('$days ngày', '$days days');
+  String get chooseDailyGoal => _t('Chọn mục tiêu mỗi ngày', 'Choose a daily goal');
+  String dailyGoalOption(int count) =>
+      _t('$count câu/ngày', '$count questions/day');
+  String get dailyGoalComplete =>
+      _t('Đã hoàn thành mục tiêu hôm nay!', 'Daily goal completed!');
+  String get studyStreakLabel => _t('Chuỗi ngày học', 'Study streak');
   String get searchQuestions => _t('Tra cứu nhanh', 'Quick search');
   String get searchPrompt => _t('Tìm từ khóa, khái niệm Flutter...', 'Search keywords, Flutter concepts...');
   String get searchHomePrompt => _t('Tra cứu nhanh 300 câu hỏi...', 'Search 300 questions...');
