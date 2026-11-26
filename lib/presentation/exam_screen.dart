@@ -37,6 +37,38 @@ class ExamScreen extends StatefulWidget {
   State<ExamScreen> createState() => _ExamScreenState();
 }
 
+class _LegendDot extends StatelessWidget {
+  const _LegendDot({
+    required this.color,
+    required this.borderColor,
+    required this.label,
+  });
+
+  final Color color;
+  final Color borderColor;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 14,
+          height: 14,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(color: borderColor),
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(label, style: Theme.of(context).textTheme.bodySmall),
+      ],
+    );
+  }
+}
+
 class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
   late final ExamSession _session = ExamSession(widget.questions);
   late final DateTime Function() _now;
@@ -129,6 +161,114 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
     _finish(timedOut: false);
   }
 
+// Mở bottom sheet dạng lưới hiển thị trạng thái đã làm / chưa làm và cho phép nhảy tới câu bất kỳ.
+  Future<void> _openQuestionNavigator() async {
+    final colorScheme = Theme.of(context).colorScheme;
+    final total = _session.questions.length;
+
+    final selectedIndex = await showModalBottomSheet<int>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '${_session.answeredCount}/$total',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    _LegendDot(
+                      color: colorScheme.primaryContainer,
+                      borderColor: colorScheme.primary,
+                      label: 'Đã làm',
+                    ),
+                    const SizedBox(width: 12),
+                    _LegendDot(
+                      color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+                      borderColor: colorScheme.outlineVariant,
+                      label: 'Chưa làm',
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Flexible(
+                  child: GridView.builder(
+                    shrinkWrap: true,
+                    itemCount: total,
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 5,
+                      mainAxisSpacing: 8,
+                      crossAxisSpacing: 8,
+                      childAspectRatio: 1.25,
+                    ),
+                    itemBuilder: (_, i) {
+                      final q = _session.questions[i];
+                      final isAnswered = _session.answerOf(q) != null;
+                      final isCurrent = i == _index;
+
+                      final bgColor = isAnswered
+                          ? colorScheme.primaryContainer
+                          : colorScheme.surfaceContainerHighest.withValues(alpha: 0.45);
+                      final fgColor = isAnswered
+                          ? colorScheme.onPrimaryContainer
+                          : colorScheme.onSurface;
+                      final borderColor = isCurrent
+                          ? colorScheme.primary
+                          : (isAnswered
+                          ? colorScheme.primary.withValues(alpha: 0.5)
+                          : colorScheme.outlineVariant);
+
+                      return Material(
+                        color: bgColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          side: BorderSide(
+                            color: borderColor,
+                            width: isCurrent ? 2 : 1,
+                          ),
+                        ),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(10),
+                          onTap: () => Navigator.of(sheetContext).pop(i),
+                          child: Center(
+                            child: Text(
+                              '${i + 1}',
+                              style: TextStyle(
+                                color: fgColor,
+                                fontWeight: isCurrent || isAnswered
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+// Nhảy thẳng tới câu được chọn sau khi đóng bottom sheet.
+    if (selectedIndex != null && mounted) {
+      setState(() => _index = selectedIndex);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsController>();
@@ -157,11 +297,14 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
       ),
       body: Column(
         children: [
-          ExamTimerBar(
-            remaining: _countdown.remaining(now),
-            warning: _countdown.isWarning(now),
-            answered: _session.answeredCount,
-            total: total,
+          InkWell(
+            onTap: _openQuestionNavigator,
+            child: ExamTimerBar(
+              remaining: _countdown.remaining(now),
+              warning: _countdown.isWarning(now),
+              answered: _session.answeredCount,
+              total: total,
+            ),
           ),
           LinearProgressIndicator(
             value: (_index + 1) / total,
@@ -175,9 +318,23 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                 Row(
                   children: [
                     Expanded(
-                      child: Text(
-                        s.examQuestionHeader(_index + 1, total),
-                        style: Theme.of(context).textTheme.labelLarge,
+                      child: InkWell(   // Bấm vào tiêu đề số câu/khối để mở danh sách nhảy câu nhanh.
+                        borderRadius: BorderRadius.circular(6),
+                        onTap: _openQuestionNavigator,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                s.examQuestionHeader(_index + 1, total),
+                                style: Theme.of(context).textTheme.labelLarge,
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(Icons.keyboard_arrow_down, size: 18),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                     BookmarkButton(questionId: q.id),

@@ -16,6 +16,7 @@ class AppStrings {
 
   // ---- Chung ----
   String get appTitle => _t('Ôn tập Flutter', 'Flutter Review');
+  String get settings => _t('Cài đặt', 'Settings');
   String get retry => _t('Thử lại', 'Try again');
   String get reload => _t('Tải lại', 'Reload');
   String get backToHome => _t('Về trang chủ', 'Back to home');

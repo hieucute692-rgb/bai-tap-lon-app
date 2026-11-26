@@ -56,6 +56,67 @@ class _PracticeScreenState extends State<PracticeScreen> {
     return OptionState.idle;
   }
 
+// Mở bottom sheet dạng lưới giúp chuyển nhanh giữa các câu trong phiên luyện tập.
+  Future<void> _openQuestionNavigator(int total) async {
+    final colorScheme = Theme.of(context).colorScheme;
+    final selectedIndex = await showModalBottomSheet<int>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+            child: GridView.builder(
+              shrinkWrap: true,
+              itemCount: total,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 5,
+                mainAxisSpacing: 8,
+                crossAxisSpacing: 8,
+                childAspectRatio: 1.25,
+              ),
+              itemBuilder: (_, i) {
+                final isCurrent = i == _session.index;
+                return Material(
+                  color: isCurrent
+                      ? colorScheme.primaryContainer
+                      : colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    side: BorderSide(
+                      color: isCurrent ? colorScheme.primary : colorScheme.outlineVariant,
+                      width: isCurrent ? 2 : 1,
+                    ),
+                  ),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(10),
+                    onTap: () => Navigator.of(sheetContext).pop(i),
+                    child: Center(
+                      child: Text(
+                        '${i + 1}',
+                        style: TextStyle(
+                          color: isCurrent
+                              ? colorScheme.onPrimaryContainer
+                              : colorScheme.onSurface,
+                          fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+
+// Nhảy tới chỉ số câu người dùng vừa chọn.
+    if (selectedIndex != null && mounted) {
+      setState(() => _session.index = selectedIndex);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsController>();
@@ -93,9 +154,23 @@ class _PracticeScreenState extends State<PracticeScreen> {
                 Row(
                   children: [
                     Expanded(
-                      child: Text(
-                        s.practiceQuestionHeader(_session.index + 1, total, q.blockId),
-                        style: Theme.of(context).textTheme.labelLarge,
+                      child: InkWell(   // Bấm vào tiêu đề số câu/khối để mở danh sách nhảy câu nhanh.
+                        borderRadius: BorderRadius.circular(6),
+                        onTap: () => _openQuestionNavigator(total),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                s.practiceQuestionHeader(_session.index + 1, total, q.blockId),
+                                style: Theme.of(context).textTheme.labelLarge,
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(Icons.keyboard_arrow_down, size: 18),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                     BookmarkButton(questionId: q.id),

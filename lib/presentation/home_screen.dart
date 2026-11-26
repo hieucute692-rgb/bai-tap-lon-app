@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../domain/progress_stats.dart';
-import '../domain/question.dart';
 import '../domain/question_bank.dart';
 import 'bookmark_controller.dart';
 import 'bookmarks_screen.dart';
@@ -11,6 +10,7 @@ import 'practice_screen.dart';
 import 'practice_setup_screen.dart';
 import 'progress_controller.dart';
 import 'question_bank_controller.dart';
+import 'settings_screen.dart';
 import 'settings_controller.dart';
 import 'stats_screen.dart';
 import 'strings_context.dart';
@@ -83,51 +83,46 @@ class _Menu extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 16,
-            runSpacing: 16,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Semantics(
-                header: true,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      s.appTitle,
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.5,
-                        color: scheme.onSurface,
+              Expanded(
+                child: Semantics(
+                  header: true,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        s.appTitle,
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.5,
+                          color: scheme.onSurface,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      s.questionsAndBlocks(bank.questions.length, bank.blocks.length),
-                      style: TextStyle(fontSize: 15, color: scheme.onSurfaceVariant),
-                    ),
-                  ],
+                      const SizedBox(height: 4),
+                      Text(
+                        s.questionsAndBlocks(
+                          bank.questions.length,
+                          bank.blocks.length,
+                        ),
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  _LanguageBlock(
-                    language: settings.language,
-                    onChanged: settings.setLanguage,
-                  ),
-                  const SizedBox(height: 8),
-                  _ThemeModeBlock(
-                    mode: settings.themeMode,
-                    onChanged: settings.setThemeMode,
-                    appearanceLabel: s.appearance,
-                    lightLabel: s.themeLight,
-                    systemLabel: s.themeSystem,
-                    darkLabel: s.themeDark,
-                  ),
-                ],
+              IconButton(  // Nút cài đặt để chuyển sang màn SettingsScreen.
+                tooltip: s.settings,
+                onPressed: () => _push(context, const SettingsScreen()),
+                icon: Icon(
+                  Icons.settings_outlined,
+                  color: scheme.onSurface,
+                ),
               ),
             ],
           ),
@@ -206,41 +201,6 @@ class _Menu extends StatelessWidget {
   }
 }
 
-/// Chọn ngôn ngữ hiển thị cho cả app (chữ giao diện và nội dung câu hỏi).
-class _LanguageBlock extends StatelessWidget {
-  const _LanguageBlock({
-    required this.language,
-    required this.onChanged,
-  });
-
-  final ContentLanguage language;
-  final ValueChanged<ContentLanguage> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return SegmentedButton<ContentLanguage>(
-      segments: const <ButtonSegment<ContentLanguage>>[
-        ButtonSegment(value: ContentLanguage.vi, label: Text('Tiếng Việt')),
-        ButtonSegment(value: ContentLanguage.en, label: Text('English')),
-      ],
-      selected: {language},
-      showSelectedIcon: false,
-      onSelectionChanged: (selection) => onChanged(selection.first),
-      style: SegmentedButton.styleFrom(
-        backgroundColor: scheme.surface,
-        foregroundColor: scheme.onSurfaceVariant,
-        selectedBackgroundColor: scheme.primary,
-        selectedForegroundColor: scheme.onPrimary,
-        side: BorderSide(color: scheme.outline),
-        shape: const StadiumBorder(),
-        textStyle: const TextStyle(fontWeight: FontWeight.w600),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      ),
-    );
-  }
-}
-
 class _ProgressCard extends StatelessWidget {
   const _ProgressCard({
     required this.completed,
@@ -288,65 +248,6 @@ class _ProgressCard extends StatelessWidget {
   }
 }
 
-class _ThemeModeBlock extends StatelessWidget {
-  const _ThemeModeBlock({
-    required this.mode,
-    required this.onChanged,
-    required this.appearanceLabel,
-    required this.lightLabel,
-    required this.systemLabel,
-    required this.darkLabel,
-  });
-
-  final ThemeMode mode;
-  final ValueChanged<ThemeMode> onChanged;
-  final String appearanceLabel;
-  final String lightLabel;
-  final String systemLabel;
-  final String darkLabel;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 6),
-          child: Text(
-            appearanceLabel,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: scheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-        SegmentedButton<ThemeMode>(
-          segments: [
-            ButtonSegment(value: ThemeMode.light, label: Text(lightLabel)),
-            ButtonSegment(value: ThemeMode.system, label: Text(systemLabel)),
-            ButtonSegment(value: ThemeMode.dark, label: Text(darkLabel)),
-          ],
-          selected: {mode},
-          showSelectedIcon: false,
-          onSelectionChanged: (selection) => onChanged(selection.first),
-          style: SegmentedButton.styleFrom(
-            backgroundColor: scheme.surface,
-            foregroundColor: scheme.onSurfaceVariant,
-            selectedBackgroundColor: scheme.primary,
-            selectedForegroundColor: scheme.onPrimary,
-            side: BorderSide(color: scheme.outline),
-            shape: const StadiumBorder(),
-            textStyle: const TextStyle(fontWeight: FontWeight.w600),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 /// Thẻ lớn nổi bật cho chức năng chính (luyện tập).
 class _HeroCard extends StatelessWidget {
   const _HeroCard({
@@ -385,7 +286,7 @@ class _HeroCard extends StatelessWidget {
                     width: 52,
                     height: 52,
                     decoration: BoxDecoration(
-                      color: scheme.onPrimary.withOpacity(0.18),
+                        color: scheme.onPrimary.withValues(alpha: 0.18),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Icon(icon, color: scheme.onPrimary, size: 28),
