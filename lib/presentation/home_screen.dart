@@ -2,15 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../domain/progress_stats.dart';
+import '../domain/question.dart';
 import '../domain/question_bank.dart';
 import 'bookmark_controller.dart';
 import 'bookmarks_screen.dart';
 import 'exam_setup_screen.dart';
 import 'practice_screen.dart';
 import 'practice_setup_screen.dart';
+import 'quick_study_blocks_screen.dart';
+import 'search_questions_screen.dart';
 import 'progress_controller.dart';
 import 'question_bank_controller.dart';
-import 'settings_screen.dart';
 import 'settings_controller.dart';
 import 'stats_screen.dart';
 import 'strings_context.dart';
@@ -24,11 +26,11 @@ class HomeScreen extends StatelessWidget {
     final s = context.strings;
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: scheme.surfaceContainerHighest,
+      backgroundColor: scheme.surface,
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 820),
+            constraints: const BoxConstraints(maxWidth: 500),
             child: switch (c.status) {
               LoadStatus.loading =>
                 const Center(child: CircularProgressIndicator()),
@@ -76,15 +78,20 @@ class _Menu extends StatelessWidget {
       return stat != null && stat.attempts > 0;
     }).length;
     final wrong = wrongQuestions(bank, stats);
-    final columns = MediaQuery.sizeOf(context).width >= 500 ? 2 : 1;
+    final correct = bank.questions.where((question) {
+      final stat = stats[question.id];
+      return stat != null && stat.attempts > 0 && stat.lastCorrect;
+    }).length;
+    final remaining = (bank.questions.length - completed)
+        .clamp(0, bank.questions.length)
+        .toInt();
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: Semantics(
@@ -94,108 +101,277 @@ class _Menu extends StatelessWidget {
                     children: [
                       Text(
                         s.appTitle,
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.5,
-                          color: scheme.onSurface,
-                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.4,
+                            ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 2),
                       Text(
                         s.questionsAndBlocks(
-                          bank.questions.length,
-                          bank.blocks.length,
-                        ),
-                        style: TextStyle(
-                          fontSize: 15,
-                          color: scheme.onSurfaceVariant,
-                        ),
+                            bank.questions.length, bank.blocks.length),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: scheme.onSurfaceVariant,
+                            ),
                       ),
                     ],
                   ),
                 ),
               ),
-              IconButton(  // Nút cài đặt để chuyển sang màn SettingsScreen.
-                tooltip: s.settings,
-                onPressed: () => _push(context, const SettingsScreen()),
-                icon: Icon(
-                  Icons.settings_outlined,
-                  color: scheme.onSurface,
-                ),
+              const SizedBox(width: 8),
+              _LanguageBlock(
+                  language: settings.language, onChanged: settings.setLanguage),
+              _ThemeModeBlock(
+                mode: settings.themeMode,
+                onChanged: settings.setThemeMode,
+                appearanceLabel: s.appearance,
+                lightLabel: s.themeLight,
+                systemLabel: s.themeSystem,
+                darkLabel: s.themeDark,
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
+          Card(
+            margin: EdgeInsets.zero,
+            color: scheme.surfaceContainerHigh,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () => _push(context, SearchQuestionsScreen(bank: bank)),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                child: Row(children: [
+                  Icon(Icons.search_rounded, color: scheme.primary),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text(s.searchHomePrompt, style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: scheme.onSurfaceVariant))),
+                  Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
+                ]),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
           _ProgressCard(
             completed: completed,
             total: bank.questions.length,
-            label: s.practiceProgress,
-            countLabel: s.statsAnswered(completed, bank.questions.length),
+            correct: correct,
+            wrong: wrong.length,
+            remaining: remaining,
+            label: s.language == ContentLanguage.vi
+                ? 'Tiến độ học'
+                : 'Learning progress',
+            dailyGoal: progress.dailyGoal,
+            todayAnsweredCount: progress.todayAnsweredCount,
+            currentStreak: progress.currentStreak,
+            goalComplete: progress.dailyGoalComplete,
+            onChooseGoal: () => _chooseDailyGoal(context, progress),
           ),
-          const SizedBox(height: 16),
-          _HeroCard(
-            icon: Icons.menu_book_outlined,
-            title: s.practice,
-            subtitle: s.practiceSubtitle,
-            onTap: () => _push(context, PracticeSetupScreen(bank: bank)),
+          const SizedBox(height: 20),
+          Text(
+            s.language == ContentLanguage.vi
+                ? 'CHỨC NĂNG CHÍNH'
+                : 'MAIN FEATURES',
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                  letterSpacing: 1,
+                  fontWeight: FontWeight.w700,
+                ),
           ),
-          const SizedBox(height: 12),
-          GridView.count(
-            crossAxisCount: columns,
-            mainAxisExtent: columns == 2 ? 124 : 96,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            children: [
-              _Tile(
-                icon: Icons.timer_outlined,
-                background: scheme.tertiaryContainer,
-                foreground: scheme.onTertiaryContainer,
-                title: s.exam,
-                subtitle: s.examShort,
-                onTap: () => _push(context, ExamSetupScreen(bank: bank)),
+          const SizedBox(height: 8),
+          Card(
+            margin: EdgeInsets.zero,
+            elevation: 0,
+            color: scheme.surfaceContainer,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: GridView.count(
+                crossAxisCount: 3,
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 12,
+                childAspectRatio: 0.9,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                children: [
+                  _ActionTile(
+                    icon: Icons.menu_book_outlined,
+                    title: s.practice,
+                    background: scheme.primaryContainer,
+                    foreground: scheme.onPrimaryContainer,
+                    onTap: () =>
+                        _push(context, PracticeSetupScreen(bank: bank)),
+                  ),
+                  _ActionTile(
+                    icon: Icons.timer_outlined,
+                    title: s.exam,
+                    background: scheme.tertiaryContainer,
+                    foreground: scheme.onTertiaryContainer,
+                    onTap: () => _push(context, ExamSetupScreen(bank: bank)),
+                  ),
+                  _ActionTile(
+                    icon: Icons.bar_chart_rounded,
+                    title: s.stats,
+                    background: scheme.secondaryContainer,
+                    foreground: scheme.onSecondaryContainer,
+                    onTap: () => _push(context, StatsScreen(bank: bank)),
+                  ),
+                  _ActionTile(
+                    icon: Icons.bolt_rounded,
+                    title: s.quickStudy,
+                    background: Colors.amber.shade100,
+                    foreground: Colors.deepOrange.shade800,
+                    onTap: () => _push(context, QuickStudyBlocksScreen(bank: bank)),
+                  ),
+                  _ActionTile(
+                    icon: Icons.replay_rounded,
+                    title:
+                        s.language == ContentLanguage.vi ? 'Câu sai' : 'Wrong',
+                    background: scheme.errorContainer,
+                    foreground: scheme.onErrorContainer,
+                    badge: wrong.isEmpty ? null : wrong.length,
+                    onTap: () {
+                      if (wrong.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(s.noWrongYet)),
+                        );
+                        return;
+                      }
+                      _push(
+                        context,
+                        PracticeScreen(
+                            titleOf: (s) => s.retryWrong, questions: wrong),
+                      );
+                    },
+                  ),
+                  _ActionTile(
+                    icon: Icons.bookmark_outline_rounded,
+                    title:
+                        s.language == ContentLanguage.vi ? 'Đánh dấu' : 'Saved',
+                    background: scheme.secondaryContainer,
+                    foreground: scheme.onSecondaryContainer,
+                    badge: bookmarks.count == 0 ? null : bookmarks.count,
+                    onTap: () => _push(context, BookmarksScreen(bank: bank)),
+                  ),
+                ],
               ),
-              _Tile(
-                icon: Icons.bar_chart,
-                background: scheme.secondaryContainer,
-                foreground: scheme.onSecondaryContainer,
-                title: s.stats,
-                subtitle: s.statsShort,
-                onTap: () => _push(context, StatsScreen(bank: bank)),
-              ),
-              _Tile(
-                icon: Icons.replay,
-                background: scheme.errorContainer,
-                foreground: scheme.onErrorContainer,
-                title: s.retryWrong,
-                subtitle: wrong.isEmpty ? s.noWrongSubtitle : s.wrongCount(wrong.length),
-                badge: wrong.isEmpty ? null : wrong.length,
-                onTap: () {
-                  if (wrong.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(s.noWrongYet)),
-                    );
-                    return;
-                  }
-                  _push(context, PracticeScreen(titleOf: (s) => s.retryWrong, questions: wrong));
-                },
-              ),
-              _Tile(
-                icon: Icons.bookmark_outline,
-                background: scheme.primaryContainer,
-                foreground: scheme.onPrimaryContainer,
-                title: s.bookmarks,
-                subtitle: bookmarks.count == 0
-                    ? s.noBookmarksSubtitle
-                    : s.bookmarkedCount(bookmarks.count),
-                badge: bookmarks.count == 0 ? null : bookmarks.count,
-                onTap: () => _push(context, BookmarksScreen(bank: bank)),
-              ),
-            ],
+            ),
           ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _chooseDailyGoal(
+    BuildContext context,
+    ProgressController progress,
+  ) async {
+    final s = context.stringsNow;
+    final selected = await showModalBottomSheet<int>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+                child: Text(s.chooseDailyGoal,
+                    style: Theme.of(context).textTheme.titleMedium),
+              ),
+              for (final goal in [10, 15, 30, 45])
+                ListTile(
+                  title: Text(s.dailyGoalOption(goal)),
+                  trailing: progress.dailyGoal == goal
+                      ? Icon(Icons.check_rounded,
+                          color: Theme.of(context).colorScheme.primary)
+                      : null,
+                  onTap: () => Navigator.of(context).pop(goal),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (selected != null) await progress.setDailyGoal(selected);
+  }
+}
+
+class _LanguageBlock extends StatelessWidget {
+  const _LanguageBlock({required this.language, required this.onChanged});
+
+  final ContentLanguage language;
+  final ValueChanged<ContentLanguage> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return SegmentedButton<ContentLanguage>(
+      segments: const [
+        ButtonSegment(value: ContentLanguage.vi, label: Text('VI')),
+        ButtonSegment(value: ContentLanguage.en, label: Text('EN')),
+      ],
+      selected: {language},
+      showSelectedIcon: false,
+      onSelectionChanged: (selection) => onChanged(selection.first),
+      style: SegmentedButton.styleFrom(
+        visualDensity: VisualDensity.compact,
+        backgroundColor: scheme.surfaceContainerLow,
+        foregroundColor: scheme.onSurfaceVariant,
+        selectedBackgroundColor: scheme.primary,
+        selectedForegroundColor: scheme.onPrimary,
+        side: BorderSide(color: scheme.outlineVariant),
+        shape: const StadiumBorder(),
+        textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      ),
+    );
+  }
+}
+
+class _ThemeModeBlock extends StatelessWidget {
+  const _ThemeModeBlock({
+    required this.mode,
+    required this.onChanged,
+    required this.appearanceLabel,
+    required this.lightLabel,
+    required this.systemLabel,
+    required this.darkLabel,
+  });
+
+  final ThemeMode mode;
+  final ValueChanged<ThemeMode> onChanged;
+  final String appearanceLabel;
+  final String lightLabel;
+  final String systemLabel;
+  final String darkLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final icon = switch (mode) {
+      ThemeMode.light => Icons.light_mode_outlined,
+      ThemeMode.dark => Icons.dark_mode_outlined,
+      ThemeMode.system => Icons.brightness_auto_outlined,
+    };
+    return PopupMenuButton<ThemeMode>(
+      tooltip: appearanceLabel,
+      initialValue: mode,
+      onSelected: onChanged,
+      itemBuilder: (_) => [
+        PopupMenuItem(value: ThemeMode.light, child: Text(lightLabel)),
+        PopupMenuItem(value: ThemeMode.dark, child: Text(darkLabel)),
+        PopupMenuItem(value: ThemeMode.system, child: Text(systemLabel)),
+      ],
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Icon(icon, color: scheme.onSurfaceVariant),
       ),
     );
   }
@@ -205,42 +381,179 @@ class _ProgressCard extends StatelessWidget {
   const _ProgressCard({
     required this.completed,
     required this.total,
+    required this.correct,
+    required this.wrong,
+    required this.remaining,
     required this.label,
-    required this.countLabel,
+    required this.dailyGoal,
+    required this.todayAnsweredCount,
+    required this.currentStreak,
+    required this.goalComplete,
+    required this.onChooseGoal,
   });
 
   final int completed;
   final int total;
+  final int correct;
+  final int wrong;
+  final int remaining;
   final String label;
-  final String countLabel;
+  final int dailyGoal;
+  final int todayAnsweredCount;
+  final int currentStreak;
+  final bool goalComplete;
+  final VoidCallback onChooseGoal;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final percent = total == 0 ? 0 : (completed * 100 / total).round();
+    final progressValue = total == 0 ? 0.0 : completed / total;
+    final isVietnamese = context.strings.language == ContentLanguage.vi;
     return Card(
       margin: EdgeInsets.zero,
       elevation: 0,
-      color: scheme.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-        side: BorderSide(color: scheme.outlineVariant),
-      ),
+      color: scheme.surfaceContainerHigh,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: Theme.of(context).textTheme.titleSmall),
-            const SizedBox(height: 4),
-            Text(
-              countLabel,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
-                  ),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(label,
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleSmall
+                          ?.copyWith(fontWeight: FontWeight.w700)),
+                ),
+                Text(
+                  isVietnamese
+                      ? '$completed / $total câu'
+                      : '$completed / $total questions',
+                  style: Theme.of(context)
+                      .textTheme
+                      .labelLarge
+                      ?.copyWith(color: scheme.onSurfaceVariant),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
-            LinearProgressIndicator(value: total == 0 ? 0 : completed / total),
+            Row(
+              children: [
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(99),
+                    child: SizedBox(
+                      height: 8,
+                      child: LinearProgressIndicator(
+                        value: progressValue,
+                        backgroundColor: scheme.surfaceContainerHighest,
+                        color: scheme.primary,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text('$percent%',
+                    style: Theme.of(context)
+                        .textTheme
+                        .labelLarge
+                        ?.copyWith(fontWeight: FontWeight.w800)),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                _ProgressStat(
+                  count: correct,
+                  label: isVietnamese ? 'đúng' : 'correct',
+                  color: Colors.green,
+                ),
+                _ProgressStat(
+                  count: wrong,
+                  label: isVietnamese ? 'sai' : 'wrong',
+                  color: scheme.error,
+                ),
+                _ProgressStat(
+                  count: remaining,
+                  label: isVietnamese ? 'còn lại' : 'remaining',
+                  color: Colors.orange,
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(children: [
+                        Expanded(
+                          child: Text(
+                            context.strings.dailyGoal,
+                            style: Theme.of(context).textTheme.labelLarge
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                        if (goalComplete)
+                          const Icon(Icons.check_circle_rounded,
+                              color: Colors.green, size: 19),
+                        IconButton(
+                          tooltip: context.strings.chooseDailyGoal,
+                          visualDensity: VisualDensity.compact,
+                          constraints:
+                              const BoxConstraints.tightFor(width: 34, height: 34),
+                          padding: EdgeInsets.zero,
+                          icon: const Icon(Icons.tune_rounded, size: 19),
+                          onPressed: onChooseGoal,
+                        ),
+                      ]),
+                      Text(
+                        context.strings.dailyGoalProgress(
+                            todayAnsweredCount, dailyGoal),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: scheme.onSurfaceVariant,
+                            ),
+                      ),
+                      const SizedBox(height: 7),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(99),
+                        child: LinearProgressIndicator(
+                          minHeight: 5,
+                          value: (todayAnsweredCount / dailyGoal)
+                              .clamp(0.0, 1.0)
+                              .toDouble(),
+                          color: goalComplete ? Colors.green : scheme.tertiary,
+                          backgroundColor: scheme.surfaceContainerHighest,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+                  decoration: BoxDecoration(
+                    color: scheme.tertiaryContainer,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Column(
+                    children: [
+                      const Icon(Icons.local_fire_department_rounded,
+                          color: Colors.deepOrange, size: 23),
+                      const SizedBox(height: 2),
+                      Text(context.strings.studyStreak(currentStreak),
+                          style: Theme.of(context).textTheme.labelMedium
+                              ?.copyWith(fontWeight: FontWeight.w800)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -248,149 +561,100 @@ class _ProgressCard extends StatelessWidget {
   }
 }
 
-/// Thẻ lớn nổi bật cho chức năng chính (luyện tập).
-class _HeroCard extends StatelessWidget {
-  const _HeroCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
+class _ProgressStat extends StatelessWidget {
+  const _ProgressStat(
+      {required this.count, required this.label, required this.color});
 
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
+  final int count;
+  final String label;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
-    final radius = BorderRadius.circular(24);
-    final scheme = Theme.of(context).colorScheme;
-    return SizedBox(
-      width: double.infinity,
-      child: Semantics(
-        button: true,
-        label: '$title. $subtitle',
-        excludeSemantics: true,
-        child: Material(
-          color: scheme.primary,
-          borderRadius: radius,
-          child: InkWell(
-            borderRadius: radius,
-            onTap: onTap,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                children: [
-                  Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                        color: scheme.onPrimary.withValues(alpha: 0.18),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Icon(icon, color: scheme.onPrimary, size: 28),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: scheme.onPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          subtitle,
-                          style: TextStyle(fontSize: 14, color: scheme.onPrimary),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Icon(Icons.arrow_forward_rounded, color: scheme.onPrimary),
-                ],
-              ),
-            ),
-          ),
-        ),
+    return Expanded(
+      child: Column(
+        children: [
+          Text('$count',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(color: color, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 2),
+          Text(label,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant)),
+        ],
       ),
     );
   }
 }
 
-class _Tile extends StatelessWidget {
-  const _Tile({
+class _ActionTile extends StatelessWidget {
+  const _ActionTile({
     required this.icon,
+    required this.title,
     required this.background,
     required this.foreground,
-    required this.title,
-    required this.subtitle,
     required this.onTap,
     this.badge,
   });
 
   final IconData icon;
+  final String title;
   final Color background;
   final Color foreground;
-  final String title;
-  final String subtitle;
   final VoidCallback onTap;
   final int? badge;
 
   @override
   Widget build(BuildContext context) {
-    final radius = BorderRadius.circular(20);
+    final radius = BorderRadius.circular(16);
     return Semantics(
       button: true,
-      label: '$title. $subtitle',
+      label: title,
       excludeSemantics: true,
       child: Material(
-        color: background,
+        color: Colors.transparent,
         borderRadius: radius,
         child: InkWell(
           borderRadius: radius,
           onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, size: 28, color: foreground),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: foreground,
-                        ),
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                          color: background, borderRadius: radius),
+                      child: Icon(icon, size: 28, color: foreground),
+                    ),
+                    if (badge != null)
+                      Positioned(
+                        top: -6,
+                        right: -8,
+                        child: _Badge(count: badge!),
                       ),
-                      const SizedBox(height: 3),
-                      Text(
-                        subtitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 12.5, color: foreground),
-                      ),
-                    ],
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context)
+                        .textTheme
+                        .labelLarge
+                        ?.copyWith(fontWeight: FontWeight.w700),
                   ),
                 ),
-                if (badge != null) ...[
-                  const SizedBox(width: 8),
-                  _Badge(count: badge!),
-                ],
-                const SizedBox(width: 4),
-                Icon(Icons.chevron_right, color: foreground),
               ],
             ),
           ),
@@ -407,19 +671,18 @@ class _Badge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.inverseSurface,
-        borderRadius: BorderRadius.circular(999),
-      ),
+          color: scheme.inverseSurface,
+          borderRadius: BorderRadius.circular(99)),
       child: Text(
         '$count',
         style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: Theme.of(context).colorScheme.onInverseSurface,
-        ),
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            color: scheme.onInverseSurface),
       ),
     );
   }

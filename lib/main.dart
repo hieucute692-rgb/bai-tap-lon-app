@@ -3,9 +3,11 @@ import 'package:provider/provider.dart';
 
 import 'data/asset_question_repository.dart';
 import 'data/shared_prefs_bookmark_repository.dart';
+import 'data/shared_prefs_daily_study_repository.dart';
 import 'data/shared_prefs_progress_repository.dart';
 import 'data/shared_prefs_settings_repository.dart';
 import 'domain/bookmark_repository.dart';
+import 'domain/daily_study_repository.dart';
 import 'domain/progress_repository.dart';
 import 'domain/question_repository.dart';
 import 'domain/settings_repository.dart';
@@ -20,6 +22,7 @@ void main() => runApp(
       QuizApp(
         repository: AssetQuestionRepository(),
         progressRepository: SharedPrefsProgressRepository(),
+        dailyStudyRepository: SharedPrefsDailyStudyRepository(),
         settingsRepository: SharedPrefsSettingsRepository(),
         bookmarkRepository: SharedPrefsBookmarkRepository(),
       ),
@@ -30,12 +33,14 @@ class QuizApp extends StatelessWidget {
     super.key,
     required this.repository,
     required this.progressRepository,
+    this.dailyStudyRepository,
     required this.settingsRepository,
     required this.bookmarkRepository,
   });
 
   final QuestionRepository repository;
   final ProgressRepository progressRepository;
+  final DailyStudyRepository? dailyStudyRepository;
   final SettingsRepository settingsRepository;
   final BookmarkRepository bookmarkRepository;
 
@@ -44,7 +49,12 @@ class QuizApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => QuestionBankController(repository)..load()),
-        ChangeNotifierProvider(create: (_) => ProgressController(progressRepository)..load()),
+        ChangeNotifierProvider(
+          create: (_) => ProgressController(
+            progressRepository,
+            dailyStudyRepository: dailyStudyRepository,
+          )..load(),
+        ),
         ChangeNotifierProvider(create: (_) => SettingsController(settingsRepository)..load()),
         ChangeNotifierProvider(create: (_) => BookmarkController(bookmarkRepository)..load()),
       ],

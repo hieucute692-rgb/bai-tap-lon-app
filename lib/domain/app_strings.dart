@@ -38,6 +38,31 @@ class AppStrings {
       );
   String get displayLanguage => _t('Ngôn ngữ hiển thị', 'Display language');
   String get practice => _t('Luyện tập', 'Practice');
+  String get quickStudy => _t('Học nhanh', 'Quick study');
+  String get quickStudySubtitle => _t('Ôn nhanh lý thuyết cốt lõi · 20 khối', 'Review core theory · 20 blocks');
+  String get quickStudyAll => _t('Tất cả câu trong khối', 'All questions in block');
+  String get quickStudyBookmarked => _t('Chỉ câu đã đánh dấu', 'Bookmarked only');
+  String get quickStudyEmpty => _t('Chưa có câu nào được đánh dấu trong khối này.', 'No bookmarked questions in this block yet.');
+  String get quickStudyAnswer => _t('Đáp án đúng', 'Correct answer');
+  String get dailyGoal => _t('Mục tiêu hôm nay', 'Today\'s goal');
+  String dailyGoalProgress(int count, int goal) =>
+      _t('Hôm nay: $count / $goal câu', 'Today: $count / $goal questions');
+  String studyStreak(int days) => _t('$days ngày', '$days days');
+  String get chooseDailyGoal => _t('Chọn mục tiêu mỗi ngày', 'Choose a daily goal');
+  String dailyGoalOption(int count) =>
+      _t('$count câu/ngày', '$count questions/day');
+  String get dailyGoalComplete =>
+      _t('Đã hoàn thành mục tiêu hôm nay!', 'Daily goal completed!');
+  String get studyStreakLabel => _t('Chuỗi ngày học', 'Study streak');
+  String get searchQuestions => _t('Tra cứu nhanh', 'Quick search');
+  String get searchPrompt => _t('Tìm từ khóa, khái niệm Flutter...', 'Search keywords, Flutter concepts...');
+  String get searchHomePrompt => _t('Tra cứu nhanh 300 câu hỏi...', 'Search 300 questions...');
+  String get searchAllBlocks => _t('Tất cả', 'All');
+  String get searchShowAnswers => _t('Hiện đáp án', 'Show answers');
+  String get searchFound => _t('Tìm thấy', 'Found');
+  String get searchResults => _t('câu hỏi', 'questions');
+  String get searchEmpty => _t('Không tìm thấy câu hỏi phù hợp.', 'No matching questions found.');
+  String get searchHint => _t('Nhập từ khóa hoặc thử một gợi ý bên dưới.', 'Enter a keyword or try a suggestion below.');
   String get practiceSubtitle => _t(
         'Làm theo khối, biết đúng sai và xem giải thích ngay',
         'Practice by block with instant feedback and explanations',

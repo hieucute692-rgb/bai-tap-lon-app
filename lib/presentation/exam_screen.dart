@@ -119,7 +119,10 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
       Navigator.of(context).pop(); // đóng hộp thoại xác nhận đang mở
     }
     final progress = context.read<ProgressController>();
-    progress.recordAnswers(_session.outcomes());
+    progress.recordAnswers(
+      _session.outcomes(),
+      activityCount: _session.answeredCount,
+    );
     progress.addExamResult(_session.toResult(_now()));
     Navigator.of(context).pushReplacement(
       MaterialPageRoute<void>(
