@@ -37,6 +37,12 @@ class AppStrings {
       );
   String get displayLanguage => _t('Ngôn ngữ hiển thị', 'Display language');
   String get practice => _t('Luyện tập', 'Practice');
+  String get quickStudy => _t('Học nhanh', 'Quick study');
+  String get quickStudySubtitle => _t('Ôn nhanh lý thuyết cốt lõi · 20 khối', 'Review core theory · 20 blocks');
+  String get quickStudyAll => _t('Tất cả câu trong khối', 'All questions in block');
+  String get quickStudyBookmarked => _t('Chỉ câu đã đánh dấu', 'Bookmarked only');
+  String get quickStudyEmpty => _t('Chưa có câu nào được đánh dấu trong khối này.', 'No bookmarked questions in this block yet.');
+  String get quickStudyAnswer => _t('Đáp án đúng', 'Correct answer');
   String get practiceSubtitle => _t(
         'Làm theo khối, biết đúng sai và xem giải thích ngay',
         'Practice by block with instant feedback and explanations',

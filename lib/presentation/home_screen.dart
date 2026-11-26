@@ -9,6 +9,7 @@ import 'bookmarks_screen.dart';
 import 'exam_setup_screen.dart';
 import 'practice_screen.dart';
 import 'practice_setup_screen.dart';
+import 'quick_study_blocks_screen.dart';
 import 'progress_controller.dart';
 import 'question_bank_controller.dart';
 import 'settings_controller.dart';
@@ -193,6 +194,13 @@ class _Menu extends StatelessWidget {
                     background: scheme.secondaryContainer,
                     foreground: scheme.onSecondaryContainer,
                     onTap: () => _push(context, StatsScreen(bank: bank)),
+                  ),
+                  _ActionTile(
+                    icon: Icons.bolt_rounded,
+                    title: s.quickStudy,
+                    background: Colors.amber.shade100,
+                    foreground: Colors.deepOrange.shade800,
+                    onTap: () => _push(context, QuickStudyBlocksScreen(bank: bank)),
                   ),
                   _ActionTile(
                     icon: Icons.replay_rounded,
