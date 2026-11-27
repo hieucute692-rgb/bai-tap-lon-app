@@ -13,6 +13,8 @@ import 'quick_study_blocks_screen.dart';
 import 'search_questions_screen.dart';
 import 'progress_controller.dart';
 import 'question_bank_controller.dart';
+import 'question_manager_screen.dart';
+import 'settings_screen.dart';
 import 'settings_controller.dart';
 import 'stats_screen.dart';
 import 'strings_context.dart';
@@ -40,13 +42,13 @@ class HomeScreen extends StatelessWidget {
                   actionLabel: s.retry,
                   onAction: c.load,
                 ),
-              LoadStatus.ready => c.bank!.isEmpty
+              LoadStatus.ready => c.bank == null
                   ? _Message(
-                      icon: Icons.inbox_outlined,
-                      text: s.noQuestions,
-                      actionLabel: s.reload,
-                      onAction: c.load,
-                    )
+                icon: Icons.inbox_outlined,
+                text: s.noQuestions,
+                actionLabel: s.reload,
+                onAction: c.load,
+              )
                   : _Menu(bank: c.bank!),
             },
           ),
@@ -70,6 +72,7 @@ class _Menu extends StatelessWidget {
     final progress = context.watch<ProgressController>();
     final settings = context.watch<SettingsController>();
     final bookmarks = context.watch<BookmarkController>();
+    final bankController = context.watch<QuestionBankController>();
     final s = settings.strings;
     final scheme = Theme.of(context).colorScheme;
     final stats = progress.stats;
@@ -92,6 +95,7 @@ class _Menu extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: Semantics(
@@ -99,39 +103,56 @@ class _Menu extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        s.appTitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -0.4,
+                      InkWell(
+                        borderRadius: BorderRadius.circular(8),
+                        onTap: () => _chooseSubject(context, bankController),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                bankController.currentSubject?.name ?? s.appTitle,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: -0.5,
+                                  color: scheme.onSurface,
+                                ),
+                              ),
                             ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              size: 28,
+                              color: scheme.onSurface,
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 4),
                       Text(
                         s.questionsAndBlocks(
-                            bank.questions.length, bank.blocks.length),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
+                          bank.questions.length,
+                          bank.blocks.length,
+                        ),
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: scheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
-              _LanguageBlock(
-                  language: settings.language, onChanged: settings.setLanguage),
-              _ThemeModeBlock(
-                mode: settings.themeMode,
-                onChanged: settings.setThemeMode,
-                appearanceLabel: s.appearance,
-                lightLabel: s.themeLight,
-                systemLabel: s.themeSystem,
-                darkLabel: s.themeDark,
+              IconButton(
+                tooltip: s.settings,
+                onPressed: () => _push(context, const SettingsScreen()),
+                icon: Icon(
+                  Icons.settings_outlined,
+                  color: scheme.onSurface,
+                ),
               ),
             ],
           ),
@@ -155,6 +176,40 @@ class _Menu extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
+          if (bank.isEmpty) ...[
+            Card(
+              margin: EdgeInsets.zero,
+              color: scheme.surfaceContainerHigh,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    Text(
+                      s.noQuestions,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 12),
+                    if (bankController.currentSubject != null)
+                      FilledButton.icon(
+                        onPressed: () => _push(
+                          context,
+                          QuestionFormScreen(
+                            subject: bankController.currentSubject!,
+                            initialQuestion: null,
+                          ),
+                        ),
+                        icon: const Icon(Icons.add),
+                        label: Text(s.addQuestion),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
           _ProgressCard(
             completed: completed,
             total: bank.questions.length,
@@ -203,15 +258,30 @@ class _Menu extends StatelessWidget {
                     title: s.practice,
                     background: scheme.primaryContainer,
                     foreground: scheme.onPrimaryContainer,
-                    onTap: () =>
-                        _push(context, PracticeSetupScreen(bank: bank)),
+                    onTap: () {
+                      if (bank.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(s.noQuestions)),
+                        );
+                        return;
+                      }
+                      _push(context, PracticeSetupScreen(bank: bank));
+                    },
                   ),
                   _ActionTile(
                     icon: Icons.timer_outlined,
                     title: s.exam,
                     background: scheme.tertiaryContainer,
                     foreground: scheme.onTertiaryContainer,
-                    onTap: () => _push(context, ExamSetupScreen(bank: bank)),
+                    onTap: () {
+                      if (bank.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(s.noQuestions)),
+                        );
+                        return;
+                      }
+                      _push(context, ExamSetupScreen(bank: bank));
+                    },
                   ),
                   _ActionTile(
                     icon: Icons.bar_chart_rounded,
@@ -257,6 +327,13 @@ class _Menu extends StatelessWidget {
                     badge: bookmarks.count == 0 ? null : bookmarks.count,
                     onTap: () => _push(context, BookmarksScreen(bank: bank)),
                   ),
+                  _ActionTile(
+                    icon: Icons.folder_open_outlined,
+                    title: s.manageQuestions,
+                    background: scheme.primaryContainer,
+                    foreground: scheme.onPrimaryContainer,
+                    onTap: () => _push(context, const QuestionManagerSubjectsScreen()),
+                  ),
                 ],
               ),
             ),
@@ -301,79 +378,90 @@ class _Menu extends StatelessWidget {
     );
     if (selected != null) await progress.setDailyGoal(selected);
   }
-}
 
-class _LanguageBlock extends StatelessWidget {
-  const _LanguageBlock({required this.language, required this.onChanged});
-
-  final ContentLanguage language;
-  final ValueChanged<ContentLanguage> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return SegmentedButton<ContentLanguage>(
-      segments: const [
-        ButtonSegment(value: ContentLanguage.vi, label: Text('VI')),
-        ButtonSegment(value: ContentLanguage.en, label: Text('EN')),
-      ],
-      selected: {language},
-      showSelectedIcon: false,
-      onSelectionChanged: (selection) => onChanged(selection.first),
-      style: SegmentedButton.styleFrom(
-        visualDensity: VisualDensity.compact,
-        backgroundColor: scheme.surfaceContainerLow,
-        foregroundColor: scheme.onSurfaceVariant,
-        selectedBackgroundColor: scheme.primary,
-        selectedForegroundColor: scheme.onPrimary,
-        side: BorderSide(color: scheme.outlineVariant),
-        shape: const StadiumBorder(),
-        textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+  Future<void> _chooseSubject(
+      BuildContext context,
+      QuestionBankController controller,
+      ) async {
+    final s = context.stringsNow;
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetCtx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+              child: Text(
+                s.selectSubject,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+            for (final sub in controller.subjects)
+              ListTile(
+                leading: const Icon(Icons.description_outlined),
+                title: Text(sub.name),
+                subtitle: Text(sub.fileName),
+                trailing: controller.currentSubject?.id == sub.id
+                    ? Icon(Icons.check_rounded,
+                    color: Theme.of(context).colorScheme.primary)
+                    : null,
+                onTap: () async {
+                  Navigator.of(sheetCtx).pop();
+                  await controller.selectSubject(sub);
+                },
+              ),
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.create_new_folder_outlined),
+              title: Text(s.newSubject),
+              onTap: () {
+                Navigator.of(sheetCtx).pop();
+                _showCreateSubjectDialog(context, controller);
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }
-}
 
-class _ThemeModeBlock extends StatelessWidget {
-  const _ThemeModeBlock({
-    required this.mode,
-    required this.onChanged,
-    required this.appearanceLabel,
-    required this.lightLabel,
-    required this.systemLabel,
-    required this.darkLabel,
-  });
-
-  final ThemeMode mode;
-  final ValueChanged<ThemeMode> onChanged;
-  final String appearanceLabel;
-  final String lightLabel;
-  final String systemLabel;
-  final String darkLabel;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final icon = switch (mode) {
-      ThemeMode.light => Icons.light_mode_outlined,
-      ThemeMode.dark => Icons.dark_mode_outlined,
-      ThemeMode.system => Icons.brightness_auto_outlined,
-    };
-    return PopupMenuButton<ThemeMode>(
-      tooltip: appearanceLabel,
-      initialValue: mode,
-      onSelected: onChanged,
-      itemBuilder: (_) => [
-        PopupMenuItem(value: ThemeMode.light, child: Text(lightLabel)),
-        PopupMenuItem(value: ThemeMode.dark, child: Text(darkLabel)),
-        PopupMenuItem(value: ThemeMode.system, child: Text(systemLabel)),
-      ],
-      child: Padding(
-        padding: const EdgeInsets.all(10),
-        child: Icon(icon, color: scheme.onSurfaceVariant),
+  Future<void> _showCreateSubjectDialog(
+      BuildContext context,
+      QuestionBankController controller,
+      ) async {
+    final s = context.stringsNow;
+    final nameCtrl = TextEditingController();
+    final createdName = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(s.newSubject),
+        content: TextField(
+          controller: nameCtrl,
+          autofocus: true,
+          decoration: InputDecoration(hintText: s.subjectName),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(s.goBack),
+          ),
+          FilledButton(
+            onPressed: () {
+              final text = nameCtrl.text.trim();
+              if (text.isNotEmpty) Navigator.pop(ctx, text);
+            },
+            child: Text(s.save),
+          ),
+        ],
       ),
     );
+    nameCtrl.dispose();
+    if (createdName != null && createdName.isNotEmpty) {
+      await controller.createSubject(createdName);
+    }
   }
 }
 

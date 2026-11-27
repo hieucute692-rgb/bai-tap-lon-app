@@ -7,6 +7,7 @@ import '../domain/progress_repository.dart';
 import '../domain/daily_study.dart';
 import '../domain/daily_study_repository.dart';
 import 'question_bank_controller.dart';
+import '../data/shared_prefs_progress_repository.dart';
 
 /// Loại sự cố khi đọc/ghi tiến độ; giao diện tự đổi thành câu chữ theo ngôn ngữ.
 enum ProgressProblem { loadFailed, saveFailed }
@@ -66,6 +67,19 @@ class ProgressController extends ChangeNotifier {
     _notify();
   }
 
+  Future<void> setSubject(String subjectId) async {
+    if (_repository is SharedPrefsProgressRepository) {
+      final repo = _repository as SharedPrefsProgressRepository;
+      if (repo.subjectId == subjectId && _status == LoadStatus.ready) return;
+      repo.setSubject(subjectId);
+    }
+    _status = LoadStatus.loading;
+    _stats = {};
+    _exams = [];
+    _problem = null;
+    _notify();
+    await load();
+  }
   /// Ghi kết quả các câu vừa làm (mã câu -> đúng/sai).
   Future<void> recordAnswers(
     Map<int, bool> outcomes, {

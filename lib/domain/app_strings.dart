@@ -56,7 +56,7 @@ class AppStrings {
   String get studyStreakLabel => _t('Chuỗi ngày học', 'Study streak');
   String get searchQuestions => _t('Tra cứu nhanh', 'Quick search');
   String get searchPrompt => _t('Tìm từ khóa, khái niệm Flutter...', 'Search keywords, Flutter concepts...');
-  String get searchHomePrompt => _t('Tra cứu nhanh 300 câu hỏi...', 'Search 300 questions...');
+  String get searchHomePrompt => _t('Tra cứu câu hỏi...', 'Search questions...');
   String get searchAllBlocks => _t('Tất cả', 'All');
   String get searchShowAnswers => _t('Hiện đáp án', 'Show answers');
   String get searchFound => _t('Tìm thấy', 'Found');
@@ -219,4 +219,26 @@ class AppStrings {
         'Không lưu được tiến độ trên máy; kết quả sẽ mất khi thoát app.',
         'Could not save progress on this device; results will be lost when you leave the app.',
       );
+  // ---- CRUD form ----
+  String get manageQuestions => _t('Quản lý câu hỏi', 'Manage questions');
+  String get manageQuestionsShort => _t('Sửa & thêm JSON', 'Edit & JSON');
+  String get selectSubject => _t('Chọn môn học', 'Select subject');
+  String get newSubject => _t('Tạo môn mới', 'New subject');
+  String get subjectName => _t('Tên môn học', 'Subject name');
+  String get blocksScreenTitle => _t('Các mục lớn', 'Blocks');
+  String get questionsInBlockTitle => _t('Danh sách câu hỏi', 'Questions');
+  String get addQuestion => _t('Thêm câu hỏi', 'Add question');
+  String get editQuestion => _t('Sửa câu hỏi', 'Edit question');
+  String get save => _t('Lưu', 'Save');
+  String get savedSuccess => _t('Đã lưu vào file JSON', 'Saved to JSON file');
+  String get deleteQuestion => _t('Xóa câu hỏi', 'Delete question');
+  String get questionIdLabel => _t('ID câu hỏi', 'Question ID');
+  String get blockIdLabel => _t('Mã khối (block_id)', 'Block ID');
+  String get blockNameViLabel => _t('Tên khối (VI)', 'Block name (VI)');
+  String get blockNameEnLabel => _t('Tên khối (EN)', 'Block name (EN)');
+  String get questionViLabel => _t('Nội dung câu hỏi (VI)', 'Question (VI)');
+  String get questionEnLabel => _t('Nội dung câu hỏi (EN)', 'Question (EN)');
+  String get correctIndexLabel => _t('Đáp án đúng (0 - 3)', 'Correct index (0 - 3)');
+  String get explanationViLabel => _t('Giải thích (VI)', 'Explanation (VI)');
+  String get explanationEnLabel => _t('Giải thích (EN)', 'Explanation (EN)');
 }

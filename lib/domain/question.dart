@@ -64,6 +64,49 @@ class Question {
   final String explanationVi;
   final String explanationEn;
 
+  // CRUD và lưu ra file .json
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'id': id,
+    'block_id': blockId,
+    'block_name_vi': blockNameVi,
+    'block_name_en': blockNameEn,
+    'question_vi': questionVi,
+    'question_en': questionEn,
+    'options_vi': optionsVi,
+    'options_en': optionsEn,
+    'correct_index': correctIndex,
+    'explanation_vi': explanationVi,
+    'explanation_en': explanationEn,
+  };
+
+  Question copyWith({
+    int? id,
+    int? blockId,
+    String? blockNameVi,
+    String? blockNameEn,
+    String? questionVi,
+    String? questionEn,
+    List<String>? optionsVi,
+    List<String>? optionsEn,
+    int? correctIndex,
+    String? explanationVi,
+    String? explanationEn,
+  }) {
+    return Question(
+      id: id ?? this.id,
+      blockId: blockId ?? this.blockId,
+      blockNameVi: blockNameVi ?? this.blockNameVi,
+      blockNameEn: blockNameEn ?? this.blockNameEn,
+      questionVi: questionVi ?? this.questionVi,
+      questionEn: questionEn ?? this.questionEn,
+      optionsVi: optionsVi ?? this.optionsVi,
+      optionsEn: optionsEn ?? this.optionsEn,
+      correctIndex: correctIndex ?? this.correctIndex,
+      explanationVi: explanationVi ?? this.explanationVi,
+      explanationEn: explanationEn ?? this.explanationEn,
+    );
+  }
+
   String blockNameFor(ContentLanguage lang) =>
       lang == ContentLanguage.vi ? blockNameVi : blockNameEn;
 
