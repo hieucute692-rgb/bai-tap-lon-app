@@ -7,12 +7,31 @@ import '../domain/bookmark_repository.dart';
 
 /// Lưu các câu đã đánh dấu trên máy bằng shared_preferences. Dữ liệu hỏng thì coi như chưa có.
 class SharedPrefsBookmarkRepository implements BookmarkRepository {
-  static const key = 'bookmarks_v1';
+  SharedPrefsBookmarkRepository({String subjectId = defaultSubjectId})
+      : _subjectId = _sanitizeSubjectId(subjectId);
+
+  static const String defaultSubjectId = 'flutter_review';
+  static const String _keyPrefix = 'bookmarks_v1_';
+
+  String _subjectId;
+
+  String get subjectId => _subjectId;
+
+  static String _sanitizeSubjectId(String id) {
+    final cleaned = id.trim();
+    return cleaned.isEmpty ? defaultSubjectId : cleaned;
+  }
+
+  String get _key => '$_keyPrefix$_subjectId';
+
+  void setSubject(String subjectId) {
+    _subjectId = _sanitizeSubjectId(subjectId);
+  }
 
   @override
   Future<Set<int>> loadBookmarks() async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(key);
+    final raw = prefs.getString(_key);
     if (raw == null) return <int>{};
     try {
       final list = jsonDecode(raw) as List;
@@ -26,6 +45,6 @@ class SharedPrefsBookmarkRepository implements BookmarkRepository {
   @override
   Future<void> saveBookmarks(Set<int> ids) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(key, jsonEncode(ids.toList()..sort()));
+    await prefs.setString(_key, jsonEncode(ids.toList()..sort()));
   }
 }
