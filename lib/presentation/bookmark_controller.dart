@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../domain/bookmark_repository.dart';
+import '../data/shared_prefs_bookmark_repository.dart';
 import 'question_bank_controller.dart';
 
 /// Loại sự cố khi đọc/ghi danh sách đánh dấu; giao diện tự đổi thành câu chữ theo ngôn ngữ.
@@ -24,6 +25,19 @@ class BookmarkController extends ChangeNotifier {
   BookmarkProblem? get problem => _problem;
 
   bool isBookmarked(int questionId) => _ids.contains(questionId);
+
+  Future<void> setSubject(String subjectId) async {
+    if (_repository is SharedPrefsBookmarkRepository) {
+      final repo = _repository as SharedPrefsBookmarkRepository;
+      if (repo.subjectId == subjectId && _status == LoadStatus.ready) return;
+      repo.setSubject(subjectId);
+    }
+    _status = LoadStatus.loading;
+    _ids = <int>{};
+    _problem = null;
+    _notify();
+    await load();
+  }
 
   Future<void> load() async {
     try {

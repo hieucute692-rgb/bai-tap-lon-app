@@ -1,12 +1,11 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/services.dart';
-import 'package:path_provider/path_provider.dart';
 
 import '../domain/question.dart';
 import '../domain/question_bank.dart';
 import 'asset_question_repository.dart';
+import 'subject_storage_backend.dart';
 
 class SubjectItem {
   const SubjectItem({
@@ -33,29 +32,17 @@ class SubjectItem {
 }
 
 class JsonSubjectStore {
-  JsonSubjectStore({AssetBundle? bundle}) : _bundle = bundle ?? rootBundle;
+  JsonSubjectStore({
+    AssetBundle? bundle,
+    SubjectStorageBackend? storage,
+  })  : _bundle = bundle ?? rootBundle,
+        _storage = storage ?? createSubjectStorageBackend();
 
   final AssetBundle _bundle;
+  final SubjectStorageBackend _storage;
+
   static const _defaultSubjectId = 'flutter_review';
-
-  Future<Directory> _subjectsDir() async {
-    final docDir = await getApplicationDocumentsDirectory();
-    final dir = Directory('${docDir.path}/subjects');
-    if (!await dir.exists()) {
-      await dir.create(recursive: true);
-    }
-    return dir;
-  }
-
-  Future<File> _metaFile() async {
-    final dir = await _subjectsDir();
-    return File('${dir.path}/_subjects_meta.json');
-  }
-
-  Future<File> _questionFile(String fileName) async {
-    final dir = await _subjectsDir();
-    return File('${dir.path}/$fileName');
-  }
+  static const _metaKey = '_subjects_meta.json';
 
   String _slugifyFileName(String raw) {
     final cleaned = raw
@@ -67,31 +54,31 @@ class JsonSubjectStore {
   }
 
   Future<List<SubjectItem>> ensureInitialized() async {
-    final meta = await _metaFile();
-    final defaultJsonFile = await _questionFile('flutter_review.json');
+    const defaultJsonKey = 'flutter_review.json';
 
-    if (!await defaultJsonFile.exists()) {
+    if (!await _storage.exists(defaultJsonKey)) {
       final rawAsset =
       await _bundle.loadString(AssetQuestionRepository.defaultAssetPath);
-      await defaultJsonFile.writeAsString(rawAsset, encoding: utf8);
+      await _storage.writeString(defaultJsonKey, rawAsset);
     }
 
-    if (!await meta.exists()) {
+    if (!await _storage.exists(_metaKey)) {
       final initial = [
         const SubjectItem(
           id: _defaultSubjectId,
           name: 'Ôn tập Flutter',
-          fileName: 'flutter_review.json',
+          fileName: defaultJsonKey,
         ),
       ];
-      await meta.writeAsString(
+      await _storage.writeString(
+        _metaKey,
         jsonEncode(initial.map((e) => e.toJson()).toList()),
-        encoding: utf8,
       );
       return initial;
     }
 
-    final rawMeta = await meta.readAsString(encoding: utf8);
+    final rawMeta = await _storage.readString(_metaKey);
+    if (rawMeta == null || rawMeta.trim().isEmpty) return const [];
     final list = jsonDecode(rawMeta) as List<dynamic>;
     return list
         .map((e) => SubjectItem.fromJson(e as Map<String, dynamic>))
@@ -106,26 +93,23 @@ class JsonSubjectStore {
       name: name.trim(),
       fileName: fileName,
     );
-    final qFile = await _questionFile(fileName);
-    await qFile.writeAsString('[]', encoding: utf8);
+    await _storage.writeString(fileName, '[]');
 
     final updated = [...subjects, item];
-    final meta = await _metaFile();
-    await meta.writeAsString(
+    await _storage.writeString(
+      _metaKey,
       jsonEncode(updated.map((e) => e.toJson()).toList()),
-      encoding: utf8,
     );
     return item;
   }
 
   Future<List<Question>> loadQuestions(SubjectItem subject) async {
-    final file = await _questionFile(subject.fileName);
-    if (!await file.exists()) {
-      await file.writeAsString('[]', encoding: utf8);
+    if (!await _storage.exists(subject.fileName)) {
+      await _storage.writeString(subject.fileName, '[]');
       return const [];
     }
-    final content = await file.readAsString(encoding: utf8);
-    if (content.trim().isEmpty) return const [];
+    final content = await _storage.readString(subject.fileName);
+    if (content == null || content.trim().isEmpty) return const [];
     final decoded = jsonDecode(content);
     if (decoded is! List) {
       throw const FormatException('File JSON môn học phải là một mảng');
@@ -135,11 +119,13 @@ class JsonSubjectStore {
         .toList();
   }
 
-  Future<void> saveQuestions(SubjectItem subject, List<Question> questions) async {
-    final file = await _questionFile(subject.fileName);
+  Future<void> saveQuestions(
+      SubjectItem subject,
+      List<Question> questions,
+      ) async {
     const encoder = JsonEncoder.withIndent('  ');
     final payload = questions.map((q) => q.toJson()).toList();
-    await file.writeAsString(encoder.convert(payload), encoding: utf8);
+    await _storage.writeString(subject.fileName, encoder.convert(payload));
   }
 
   Future<QuestionBank> loadBank(SubjectItem subject) async {

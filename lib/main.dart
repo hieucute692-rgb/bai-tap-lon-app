@@ -53,24 +53,29 @@ class QuizApp extends StatelessWidget {
             dailyStudyRepository: dailyStudyRepository,
           )..load(),
         ),
+        ChangeNotifierProvider<BookmarkController>(
+          create: (_) => BookmarkController(bookmarkRepository)..load(),
+        ),
         ChangeNotifierProxyProvider<ProgressController, QuestionBankController>(
           create: (context) => QuestionBankController(
             subjectStore,
-            onSubjectChanged: (subjectId) =>
-                context.read<ProgressController>().setSubject(subjectId),
+            onSubjectChanged: (subjectId) async {
+              await context.read<ProgressController>().setSubject(subjectId);
+              await context.read<BookmarkController>().setSubject(subjectId);
+            },
           )..load(),
           update: (context, progress, previous) =>
           previous ??
               QuestionBankController(
                 subjectStore,
-                onSubjectChanged: progress.setSubject,
+                onSubjectChanged: (subjectId) async {
+                  await progress.setSubject(subjectId);
+                  await context.read<BookmarkController>().setSubject(subjectId);
+                },
               )..load(),
         ),
         ChangeNotifierProvider(
           create: (_) => SettingsController(settingsRepository)..load(),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => BookmarkController(bookmarkRepository)..load(),
         ),
       ],
       child: Consumer<SettingsController>(
