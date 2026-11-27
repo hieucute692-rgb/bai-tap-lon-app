@@ -14,22 +14,32 @@ class QuestionManagerSubjectsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.watch<QuestionBankController>();
     final s = context.watch<SettingsController>().strings;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
+      backgroundColor: isDark ? scheme.surface : const Color(0xFFF6F7FB),
       appBar: AppBar(
-        title: Text(s.manageQuestions),
+        backgroundColor: isDark ? scheme.surface : const Color(0xFFF6F7FB),
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          s.manageQuestions,
+          style: const TextStyle(fontWeight: FontWeight.w800, letterSpacing: -0.3),
+        ),
         actions: [
           IconButton(
             tooltip: s.newSubject,
             icon: const Icon(Icons.create_new_folder_outlined),
             onPressed: () => _createSubjectDialog(context, c),
           ),
+          const SizedBox(width: 6),
         ],
       ),
       floatingActionButton: c.currentSubject == null
           ? null
-          : FloatingActionButton(
-        onPressed: () => Navigator.of(context).push(
+          : _GradientFab(
+        onTap: () => Navigator.of(context).push(
           MaterialPageRoute<void>(
             builder: (_) => QuestionFormScreen(
               subject: c.currentSubject!,
@@ -37,26 +47,106 @@ class QuestionManagerSubjectsScreen extends StatelessWidget {
             ),
           ),
         ),
-        child: const Icon(Icons.add),
       ),
-      body: ListView.separated(
-        padding: const EdgeInsets.all(12),
-        itemCount: c.subjects.length,
-        separatorBuilder: (_, __) => const Divider(height: 1),
-        itemBuilder: (context, index) {
-          final sub = c.subjects[index];
-          return ListTile(
-            leading: const Icon(Icons.folder_rounded),
-            title: Text(sub.name),
-            subtitle: Text(sub.fileName),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => QuestionManagerBlocksScreen(subject: sub),
-              ),
-            ),
-          );
-        },
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 680),
+          child: ListView.builder(
+            padding: const EdgeInsets.fromLTRB(18, 8, 18, 88),
+            itemCount: c.subjects.length,
+            itemBuilder: (context, index) {
+              final sub = c.subjects[index];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(18),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) =>
+                            QuestionManagerBlocksScreen(subject: sub),
+                      ),
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: isDark ? scheme.surfaceContainer : Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: isDark
+                              ? Colors.white10
+                              : const Color(0xFFE8ECF7),
+                          width: 1.2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF0F172A)
+                                .withValues(alpha: 0.04),
+                            blurRadius: 14,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 46,
+                            height: 46,
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFEDE9FE), Color(0xFFDDD6FE)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(14),
+                              border:
+                              Border.all(color: Colors.white, width: 1.2),
+                            ),
+                            child: const Icon(
+                              Icons.folder_rounded,
+                              color: Color(0xFF4F46E5),
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  sub.name,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleSmall
+                                      ?.copyWith(fontWeight: FontWeight.w800),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  sub.fileName,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                    color: const Color(0xFF64748B),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(
+                            Icons.chevron_right_rounded,
+                            color: Color(0xFF94A3B8),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
       ),
     );
   }
@@ -97,7 +187,8 @@ class _QuestionManagerBlocksScreenState
   }
 
   void _reload() {
-    _future = context.read<QuestionBankController>().loadQuestionsFor(widget.subject);
+    _future =
+        context.read<QuestionBankController>().loadQuestionsFor(widget.subject);
     setState(() {});
   }
 
@@ -105,13 +196,22 @@ class _QuestionManagerBlocksScreenState
   Widget build(BuildContext context) {
     final s = context.watch<SettingsController>().strings;
     final lang = context.watch<SettingsController>().language;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
+      backgroundColor: isDark ? scheme.surface : const Color(0xFFF6F7FB),
       appBar: AppBar(
-        title: Text('${widget.subject.name} · ${s.blocksScreenTitle}'),
+        backgroundColor: isDark ? scheme.surface : const Color(0xFFF6F7FB),
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          '${widget.subject.name} · ${s.blocksScreenTitle}',
+          style: const TextStyle(fontWeight: FontWeight.w800, letterSpacing: -0.3),
+        ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
+      floatingActionButton: _GradientFab(
+        onTap: () async {
           await Navigator.of(context).push(
             MaterialPageRoute<void>(
               builder: (_) => QuestionFormScreen(
@@ -122,7 +222,6 @@ class _QuestionManagerBlocksScreenState
           );
           _reload();
         },
-        child: const Icon(Icons.add),
       ),
       body: FutureBuilder<List<Question>>(
         future: _future,
@@ -141,34 +240,127 @@ class _QuestionManagerBlocksScreenState
             return Center(child: Text(s.noQuestions));
           }
 
-          return ListView.separated(
-            padding: const EdgeInsets.all(12),
-            itemCount: blockIds.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
-            itemBuilder: (context, i) {
-              final bId = blockIds[i];
-              final items = map[bId]!;
-              final first = items.first;
-              final title = s.blockTitle(bId, first.blockNameFor(lang));
-              return ListTile(
-                leading: CircleAvatar(child: Text('$bId')),
-                title: Text(title),
-                subtitle: Text(s.questionCount(items.length)),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () async {
-                  await Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => QuestionManagerQuestionsScreen(
-                        subject: widget.subject,
-                        blockId: bId,
-                        blockTitle: title,
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 680),
+              child: ListView.builder(
+                padding: const EdgeInsets.fromLTRB(18, 8, 18, 88),
+                itemCount: blockIds.length,
+                itemBuilder: (context, i) {
+                  final bId = blockIds[i];
+                  final items = map[bId]!;
+                  final first = items.first;
+                  final title = s.blockTitle(bId, first.blockNameFor(lang));
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(18),
+                        onTap: () async {
+                          await Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => QuestionManagerQuestionsScreen(
+                                subject: widget.subject,
+                                blockId: bId,
+                                blockTitle: title,
+                              ),
+                            ),
+                          );
+                          _reload();
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color:
+                            isDark ? scheme.surfaceContainer : Colors.white,
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(
+                              color: isDark
+                                  ? Colors.white10
+                                  : const Color(0xFFE8ECF7),
+                              width: 1.2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF0F172A)
+                                    .withValues(alpha: 0.04),
+                                blurRadius: 14,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 44,
+                                height: 44,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      Color(0xFFE3EEFF),
+                                      Color(0xFFEDE9FE),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 1.2,
+                                  ),
+                                ),
+                                child: Text(
+                                  '$bId',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleSmall
+                                      ?.copyWith(
+                                    color: const Color(0xFF1E40AF),
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      title,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleSmall
+                                          ?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      s.questionCount(items.length),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                        color: const Color(0xFF64748B),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(
+                                Icons.chevron_right_rounded,
+                                color: Color(0xFF94A3B8),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   );
-                  _reload();
                 },
-              );
-            },
+              ),
+            ),
           );
         },
       ),
@@ -256,7 +448,8 @@ class _QuestionManagerQuestionsScreenState
   }
 
   void _reload() {
-    _future = context.read<QuestionBankController>().loadQuestionsFor(widget.subject);
+    _future =
+        context.read<QuestionBankController>().loadQuestionsFor(widget.subject);
     setState(() {});
   }
 
@@ -264,11 +457,22 @@ class _QuestionManagerQuestionsScreenState
   Widget build(BuildContext context) {
     final s = context.watch<SettingsController>().strings;
     final lang = context.watch<SettingsController>().language;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.blockTitle)),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
+      backgroundColor: isDark ? scheme.surface : const Color(0xFFF6F7FB),
+      appBar: AppBar(
+        backgroundColor: isDark ? scheme.surface : const Color(0xFFF6F7FB),
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          widget.blockTitle,
+          style: const TextStyle(fontWeight: FontWeight.w800, letterSpacing: -0.3),
+        ),
+      ),
+      floatingActionButton: _GradientFab(
+        onTap: () async {
           await Navigator.of(context).push(
             MaterialPageRoute<void>(
               builder: (_) => QuestionFormScreen(
@@ -280,7 +484,6 @@ class _QuestionManagerQuestionsScreenState
           );
           _reload();
         },
-        child: const Icon(Icons.add),
       ),
       body: FutureBuilder<List<Question>>(
         future: _future,
@@ -293,41 +496,115 @@ class _QuestionManagerQuestionsScreenState
           if (filtered.isEmpty) {
             return Center(child: Text(s.noQuestions));
           }
-          return ListView.separated(
-            padding: const EdgeInsets.all(12),
-            itemCount: filtered.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
-            itemBuilder: (context, idx) {
-              final q = filtered[idx];
-              return ListTile(
-                leading: Text('#${q.id}'),
-                title: Text(
-                  q.questionFor(lang),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete_outline),
-                  onPressed: () async {
-                    await context
-                        .read<QuestionBankController>()
-                        .deleteQuestion(widget.subject, q.id);
-                    _reload();
-                  },
-                ),
-                onTap: () async {
-                  await Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => QuestionFormScreen(
-                        subject: widget.subject,
-                        initialQuestion: q,
+
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 680),
+              child: ListView.builder(
+                padding: const EdgeInsets.fromLTRB(18, 8, 18, 88),
+                itemCount: filtered.length,
+                itemBuilder: (context, idx) {
+                  final q = filtered[idx];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(18),
+                        onTap: () async {
+                          await Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => QuestionFormScreen(
+                                subject: widget.subject,
+                                initialQuestion: q,
+                              ),
+                            ),
+                          );
+                          _reload();
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color:
+                            isDark ? scheme.surfaceContainer : Colors.white,
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(
+                              color: isDark
+                                  ? Colors.white10
+                                  : const Color(0xFFE8ECF7),
+                              width: 1.2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF0F172A)
+                                    .withValues(alpha: 0.04),
+                                blurRadius: 14,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 9,
+                                  vertical: 5,
+                                ),
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      Color(0xFFE3EEFF),
+                                      Color(0xFFEDE9FE),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  '#${q.id}',
+                                  style: const TextStyle(
+                                    color: Color(0xFF1E40AF),
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  q.questionFor(lang),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.delete_outline_rounded,
+                                  color: Color(0xFFDC2626),
+                                ),
+                                onPressed: () async {
+                                  await context
+                                      .read<QuestionBankController>()
+                                      .deleteQuestion(widget.subject, q.id);
+                                  _reload();
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   );
-                  _reload();
                 },
-              );
-            },
+              ),
+            ),
           );
         },
       ),
@@ -480,78 +757,176 @@ class _QuestionFormScreenState extends State<QuestionFormScreen> {
   Widget build(BuildContext context) {
     final s = context.watch<SettingsController>().strings;
     final isEdit = widget.initialQuestion != null;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
+      backgroundColor: isDark ? scheme.surface : const Color(0xFFF6F7FB),
       appBar: AppBar(
-        title: Text(isEdit ? s.editQuestion : s.addQuestion),
+        backgroundColor: isDark ? scheme.surface : const Color(0xFFF6F7FB),
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          isEdit ? s.editQuestion : s.addQuestion,
+          style: const TextStyle(fontWeight: FontWeight.w800, letterSpacing: -0.3),
+        ),
         actions: [
-          FilledButton(
-            onPressed: _hasChanges ? _onSave : null,
-            child: Text(s.save),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: _hasChanges
+                  ? const LinearGradient(
+                colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
+              )
+                  : null,
+              color: _hasChanges
+                  ? null
+                  : (isDark
+                  ? scheme.surfaceContainerHighest
+                  : const Color(0xFFE2E8F0)),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: ElevatedButton(
+              onPressed: _hasChanges ? _onSave : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                disabledBackgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                s.save,
+                style: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  color: _hasChanges ? Colors.white : const Color(0xFF94A3B8),
+                ),
+              ),
+            ),
           ),
           const SizedBox(width: 12),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _field(_idCtrl, s.questionIdLabel, isNumber: true),
-          _field(_blockIdCtrl, s.blockIdLabel, isNumber: true),
-          _field(_blockViCtrl, s.blockNameViLabel),
-          _field(_blockEnCtrl, s.blockNameEnLabel),
-          _field(_qViCtrl, s.questionViLabel, maxLines: 4),
-          _field(_qEnCtrl, s.questionEnLabel, maxLines: 4),
-          for (var i = 0; i < 4; i++) ...[
-            _field(
-              _optViCtrls[i],
-              'Đáp án ${String.fromCharCode(65 + i)} (VI)',
-              maxLines: null,
-            ),
-            _field(
-              _optEnCtrls[i],
-              'Option ${String.fromCharCode(65 + i)} (EN)',
-              maxLines: null,
-            ),
-          ],
-          DropdownButtonFormField<int>(
-            initialValue: _correctIndex,
-            decoration: InputDecoration(labelText: s.correctIndexLabel),
-            items: const [0, 1, 2, 3]
-                .map((v) => DropdownMenuItem(value: v, child: Text('$v')))
-                .toList(),
-            onChanged: (val) {
-              if (val == null) return;
-              setState(() => _correctIndex = val);
-              _recomputeDirty();
-            },
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 680),
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(18, 10, 18, 28),
+            children: [
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: isDark ? scheme.surfaceContainer : Colors.white,
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(
+                    color: isDark ? Colors.white10 : const Color(0xFFE8ECF7),
+                    width: 1.2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    _field(
+                      context,
+                      _idCtrl,
+                      s.questionIdLabel,
+                      isNumber: true,
+                    ),
+                    _field(
+                      context,
+                      _blockIdCtrl,
+                      s.blockIdLabel,
+                      isNumber: true,
+                    ),
+                    _field(context, _blockViCtrl, s.blockNameViLabel),
+                    _field(context, _blockEnCtrl, s.blockNameEnLabel),
+                    _field(context, _qViCtrl, s.questionViLabel, maxLines: 4),
+                    _field(context, _qEnCtrl, s.questionEnLabel, maxLines: 4),
+                    for (var i = 0; i < 4; i++) ...[
+                      _field(
+                        context,
+                        _optViCtrls[i],
+                        'Đáp án ${String.fromCharCode(65 + i)} (VI)',
+                        maxLines: null,
+                      ),
+                      _field(
+                        context,
+                        _optEnCtrls[i],
+                        'Option ${String.fromCharCode(65 + i)} (EN)',
+                        maxLines: null,
+                      ),
+                    ],
+                    DropdownButtonFormField<int>(
+                      initialValue: _correctIndex,
+                      decoration: InputDecoration(
+                        labelText: s.correctIndexLabel,
+                        filled: true,
+                        fillColor: isDark
+                            ? scheme.surfaceContainerHigh
+                            : const Color(0xFFF6F7FB),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      items: const [0, 1, 2, 3]
+                          .map(
+                            (v) => DropdownMenuItem(value: v, child: Text('$v')),
+                      )
+                          .toList(),
+                      onChanged: (val) {
+                        if (val == null) return;
+                        setState(() => _correctIndex = val);
+                        _recomputeDirty();
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    _field(
+                      context,
+                      _expViCtrl,
+                      s.explanationViLabel,
+                      maxLines: null,
+                      minLines: 4,
+                    ),
+                    _field(
+                      context,
+                      _expEnCtrl,
+                      s.explanationEnLabel,
+                      maxLines: null,
+                      minLines: 4,
+                      isLast: true,
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
-          _field(
-            _expViCtrl,
-            s.explanationViLabel,
-            maxLines: null,
-            minLines: 4,
-          ),
-          _field(
-            _expEnCtrl,
-            s.explanationEnLabel,
-            maxLines: null,
-            minLines: 4,
-          ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _field(
+      BuildContext context,
       TextEditingController ctrl,
       String label, {
         int? maxLines = 1,
         int? minLines,
         bool isNumber = false,
+        bool isLast = false,
       }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final scheme = Theme.of(context).colorScheme;
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: EdgeInsets.only(bottom: isLast ? 0 : 12),
       child: TextField(
         controller: ctrl,
         maxLines: maxLines,
@@ -559,8 +934,57 @@ class _QuestionFormScreenState extends State<QuestionFormScreen> {
         keyboardType: isNumber ? TextInputType.number : TextInputType.multiline,
         decoration: InputDecoration(
           labelText: label,
-          alignLabelWithHint: maxLines == null || (maxLines != null && maxLines > 1),
-          border: const OutlineInputBorder(),
+          alignLabelWithHint:
+          maxLines == null || (maxLines != null && maxLines > 1),
+          filled: true,
+          fillColor:
+          isDark ? scheme.surfaceContainerHigh : const Color(0xFFF6F7FB),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: Color(0xFF3B82F6), width: 1.5),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _GradientFab extends StatelessWidget {
+  const _GradientFab({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 56,
+      height: 56,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF3B82F6).withValues(alpha: 0.32),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: onTap,
+          child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
         ),
       ),
     );
