@@ -6,6 +6,7 @@ import 'data/shared_prefs_bookmark_repository.dart';
 import 'data/shared_prefs_daily_study_repository.dart';
 import 'data/shared_prefs_progress_repository.dart';
 import 'data/shared_prefs_settings_repository.dart';
+import 'data/study_notification_service.dart';
 import 'domain/bookmark_repository.dart';
 import 'domain/daily_study_repository.dart';
 import 'domain/progress_repository.dart';
@@ -17,15 +18,20 @@ import 'presentation/progress_controller.dart';
 import 'presentation/question_bank_controller.dart';
 import 'presentation/settings_controller.dart';
 
-void main() => runApp(
-  QuizApp(
-    subjectStore: JsonSubjectStore(),
-    progressRepository: SharedPrefsProgressRepository(),
-    dailyStudyRepository: SharedPrefsDailyStudyRepository(),
-    settingsRepository: SharedPrefsSettingsRepository(),
-    bookmarkRepository: SharedPrefsBookmarkRepository(),
-  ),
-);
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await StudyNotificationService.instance.init();
+
+  runApp(
+    QuizApp(
+      subjectStore: JsonSubjectStore(),
+      progressRepository: SharedPrefsProgressRepository(),
+      dailyStudyRepository: SharedPrefsDailyStudyRepository(),
+      settingsRepository: SharedPrefsSettingsRepository(),
+      bookmarkRepository: SharedPrefsBookmarkRepository(),
+    ),
+  );
+}
 
 class QuizApp extends StatelessWidget {
   const QuizApp({

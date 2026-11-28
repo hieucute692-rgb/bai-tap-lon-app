@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../data/study_notification_service.dart';
 import '../domain/progress_stats.dart';
 import '../domain/question.dart';
 import '../domain/question_bank.dart';
@@ -258,7 +259,10 @@ class _Menu extends StatelessWidget {
       BuildContext context,
       ProgressController progress,
       ) async {
-    final s = context.stringsNow;
+    final settings = context.read<SettingsController>();
+    final s = settings.strings;
+    final isVi = settings.language == ContentLanguage.vi;
+
     final selected = await showModalBottomSheet<int>(
       context: context,
       showDragHandle: true,
@@ -286,13 +290,43 @@ class _Menu extends StatelessWidget {
                       : null,
                   onTap: () => Navigator.of(sheetCtx).pop(goal),
                 ),
+              ListTile(
+                leading: const Icon(Icons.edit_rounded),
+                title: Text(isVi ? 'Nhập số câu tùy chỉnh...' : 'Custom goal...'),
+                onTap: () => Navigator.of(sheetCtx).pop(-1),
+              ),
             ],
           ),
         ),
       ),
     );
-    if (selected != null) {
-      await progress.setDailyGoal(selected);
+
+    if (!context.mounted || selected == null) return;
+
+    int? finalGoal = selected;
+    if (selected == -1) {
+      finalGoal = await showDialog<int>(
+        context: context,
+        barrierDismissible: true,
+        builder: (_) => _CustomGoalDialog(
+          currentGoal: progress.dailyGoal,
+          isVi: isVi,
+          saveLabel: s.save,
+          cancelLabel: s.goBack,
+        ),
+      );
+    }
+
+    if (!context.mounted || finalGoal == null || finalGoal <= 0) return;
+
+    await progress.setDailyGoal(finalGoal);
+    if (settings.notificationsEnabled) {
+      await StudyNotificationService.instance.scheduleDailyReminders(
+        dailyGoal: finalGoal,
+        todayAnsweredCount: progress.todayAnsweredCount,
+        currentStreak: progress.currentStreak,
+        isVietnamese: isVi,
+      );
     }
   }
 
@@ -474,6 +508,75 @@ class _HeaderSection extends StatelessWidget {
           icon: Icons.notifications_rounded,
           tooltip: 'Notifications',
           onTap: onOpenNotifications,
+        ),
+      ],
+    );
+  }
+}
+
+class _CustomGoalDialog extends StatefulWidget {
+  const _CustomGoalDialog({
+    required this.currentGoal,
+    required this.isVi,
+    required this.saveLabel,
+    required this.cancelLabel,
+  });
+
+  final int currentGoal;
+  final bool isVi;
+  final String saveLabel;
+  final String cancelLabel;
+
+  @override
+  State<_CustomGoalDialog> createState() => _CustomGoalDialogState();
+}
+
+class _CustomGoalDialogState extends State<_CustomGoalDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: '${widget.currentGoal}');
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final parsed = int.tryParse(_controller.text.trim());
+    if (parsed != null && parsed > 0) {
+      Navigator.of(context).pop(parsed);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(
+        widget.isVi
+            ? 'Số câu cần hoàn thành mỗi ngày'
+            : 'Daily question goal',
+      ),
+      content: TextField(
+        controller: _controller,
+        keyboardType: TextInputType.number,
+        decoration: InputDecoration(
+          hintText: widget.isVi ? 'Ví dụ: 20' : 'e.g. 20',
+        ),
+        onSubmitted: (_) => _submit(),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(widget.cancelLabel),
+        ),
+        FilledButton(
+          onPressed: _submit,
+          child: Text(widget.saveLabel),
         ),
       ],
     );

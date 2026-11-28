@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../domain/question.dart';
 import 'settings_controller.dart';
+import 'progress_controller.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -88,6 +89,117 @@ class SettingsScreen extends StatelessWidget {
                       ),
                     ),
                   ],
+                ),
+              ),
+              const SizedBox(height: 14),
+              _SettingGroupCard(
+                icon: Icons.notifications_active_rounded,
+                iconBg: const [Color(0xFFFEF3C7), Color(0xFFFDE68A)],
+                iconFg: const [Color(0xFFF59E0B), Color(0xFFD97706)],
+                title: settings.language == ContentLanguage.vi
+                    ? 'Thông báo nhắc chỉ tiêu & chuỗi'
+                    : 'Goal & Streak Notifications',
+                child: Builder(
+                  builder: (context) {
+                    final progress = context.watch<ProgressController>();
+                    final isVi = settings.language == ContentLanguage.vi;
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    isVi
+                                        ? 'Nhắc 2 lần/ngày (12:00 & 20:30)'
+                                        : 'Twice daily (12:00 & 20:30)',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(fontWeight: FontWeight.w700),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    isVi
+                                        ? 'Nhắc hoàn thành chỉ tiêu trong ngày để không mất chuỗi'
+                                        : 'Reminds you to hit your daily goal and keep your streak',
+                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: const Color(0xFF64748B),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Switch(
+                              value: settings.notificationsEnabled,
+                              onChanged: (value) async {
+                                final ok = await settings.setNotificationsEnabled(
+                                  enabled: value,
+                                  dailyGoal: progress.dailyGoal,
+                                  todayAnsweredCount: progress.todayAnsweredCount,
+                                  currentStreak: progress.currentStreak,
+                                );
+                                if (!context.mounted) return;
+                                ScaffoldMessenger.of(context)
+                                  ..hideCurrentSnackBar()
+                                  ..showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        !ok
+                                            ? (isVi
+                                            ? 'Chưa được cấp quyền thông báo trên thiết bị'
+                                            : 'Notification permission was not granted')
+                                            : (value
+                                            ? (isVi
+                                            ? 'Đã bật thông báo lúc 12:00 và 20:30'
+                                            : 'Enabled reminders at 12:00 & 20:30')
+                                            : (isVi
+                                            ? 'Đã tắt thông báo nhắc nhở'
+                                            : 'Disabled reminders')),
+                                      ),
+                                    ),
+                                  );
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        OutlinedButton.icon(
+                          onPressed: () async {
+                            final ok = await settings.sendTestNotification(
+                              dailyGoal: progress.dailyGoal,
+                              todayAnsweredCount: progress.todayAnsweredCount,
+                              currentStreak: progress.currentStreak,
+                            );
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context)
+                              ..hideCurrentSnackBar()
+                              ..showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    ok
+                                        ? (isVi
+                                        ? 'Đã gửi thông báo test lên màn hình'
+                                        : 'Test notification sent')
+                                        : (isVi
+                                        ? 'Hãy cấp quyền thông báo để test'
+                                        : 'Grant notification permission to test'),
+                                  ),
+                                ),
+                              );
+                          },
+                          icon: const Icon(Icons.send_rounded, size: 18),
+                          label: Text(
+                            isVi ? 'Test thông báo ngay' : 'Test notification now',
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
             ],

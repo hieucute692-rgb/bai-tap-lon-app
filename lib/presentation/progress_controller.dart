@@ -112,11 +112,12 @@ class ProgressController extends ChangeNotifier {
   }
 
   Future<void> setDailyGoal(int goal) async {
-    if (![10, 15, 30, 45].contains(goal)) return;
+    if (goal <= 0) return;
+    final clampedGoal = goal.clamp(1, 999);
     await _ensureDailyStudyLoaded();
-    if (goal == _daily.dailyGoal) return;
+    if (clampedGoal == _daily.dailyGoal) return;
     _daily = DailyStudyData(
-      dailyGoal: goal,
+      dailyGoal: clampedGoal,
       todayAnsweredCount: _daily.todayAnsweredCount,
       todayDate: _daily.todayDate,
       currentStreak: _daily.currentStreak,
@@ -169,15 +170,16 @@ class ProgressController extends ChangeNotifier {
     final today = _dateKey(now);
     final difference = _daysBetween(data.lastStudyDate, today);
     final hasInvalidLastDate = data.lastStudyDate != null && difference == null;
+    final validGoal = data.dailyGoal > 0 ? data.dailyGoal.clamp(1, 999) : 15;
     return DailyStudyData(
-      dailyGoal: [10, 15, 30, 45].contains(data.dailyGoal) ? data.dailyGoal : 15,
+      dailyGoal: validGoal,
       todayAnsweredCount:
-          data.todayDate == today ? data.todayAnsweredCount : 0,
+      data.todayDate == today ? data.todayAnsweredCount : 0,
       todayDate: today,
       currentStreak:
-          hasInvalidLastDate || (difference != null && difference > 1)
-              ? 0
-              : data.currentStreak,
+      hasInvalidLastDate || (difference != null && difference > 1)
+          ? 0
+          : data.currentStreak,
       lastStudyDate: hasInvalidLastDate ? null : data.lastStudyDate,
     );
   }

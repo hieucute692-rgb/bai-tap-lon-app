@@ -29,7 +29,7 @@ class DailyStudyData {
     final today = json['todayDate'];
     final last = json['lastStudyDate'];
     return DailyStudyData(
-      dailyGoal: goal is int && const [10, 15, 30, 45].contains(goal) ? goal : 15,
+      dailyGoal: goal is int && goal > 0 ? goal : 15,
       todayAnsweredCount: count is int && count >= 0 ? count : 0,
       todayDate: today is String ? today : '',
       currentStreak: streak is int && streak >= 0 ? streak : 0,
